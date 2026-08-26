@@ -1,0 +1,279 @@
+{
+  "input_manifest_sha256": "9b9f4a17c4c3141a525a79d8f5fc7dedfd6e7426df1f1df7d4c9eccbb5b47ee6",
+  "interval_seconds": 300,
+  "partitions": 40,
+  "poll_config": {
+    "inclusive_bound": true,
+    "overlap_seconds": 120.0,
+    "use_deletes_api": true,
+    "use_tiebreaker": true
+  },
+  "prediction": {
+    "checksum_calls": 41,
+    "checksum_detection_rate": 0.017241,
+    "claim": "a count check catches most of the drift incremental sync leaves",
+    "corpus_records": 4000,
+    "count_check_detection_rate": 0.0,
+    "full_compare_calls": 20,
+    "full_compare_cost_multiple_of_id_inventory": 5.0,
+    "full_compare_detection_rate": 1.0,
+    "verdict": "REFUTED",
+    "wrong_values_only_full_compare_sees": 57
+  },
+  "vendors": {
+    "atlas": [
+      {
+        "calls": 0,
+        "calls_per_1000_records": 0.0,
+        "detection_per_call": null,
+        "detection_rate": 0.0,
+        "drift_detected": {
+          "ghost": 0,
+          "missing": 0,
+          "wrong": 0
+        },
+        "drift_missed": {
+          "ghost": 1,
+          "missing": 0,
+          "wrong": 57
+        },
+        "drift_present": {
+          "ghost": 1,
+          "missing": 0,
+          "wrong": 57
+        },
+        "strategy": "none",
+        "total_detected": 0,
+        "total_missed": 58,
+        "total_present": 58
+      },
+      {
+        "calls": 1,
+        "calls_per_1000_records": 0.25,
+        "detection_per_call": 0.0,
+        "detection_rate": 0.0,
+        "drift_detected": {
+          "ghost": 0,
+          "missing": 0,
+          "wrong": 0
+        },
+        "drift_missed": {
+          "ghost": 1,
+          "missing": 0,
+          "wrong": 57
+        },
+        "drift_present": {
+          "ghost": 1,
+          "missing": 0,
+          "wrong": 57
+        },
+        "strategy": "count_check",
+        "total_detected": 0,
+        "total_missed": 58,
+        "total_present": 58
+      },
+      {
+        "calls": 41,
+        "calls_per_1000_records": 10.25,
+        "detection_per_call": 0.0244,
+        "detection_rate": 0.017241,
+        "drift_detected": {
+          "ghost": 1,
+          "missing": 0,
+          "wrong": 0
+        },
+        "drift_missed": {
+          "ghost": 0,
+          "missing": 0,
+          "wrong": 57
+        },
+        "drift_present": {
+          "ghost": 1,
+          "missing": 0,
+          "wrong": 57
+        },
+        "strategy": "partitioned_checksum",
+        "total_detected": 1,
+        "total_missed": 57,
+        "total_present": 58
+      },
+      {
+        "calls": 4,
+        "calls_per_1000_records": 1.0,
+        "detection_per_call": 0.25,
+        "detection_rate": 0.017241,
+        "drift_detected": {
+          "ghost": 1,
+          "missing": 0,
+          "wrong": 0
+        },
+        "drift_missed": {
+          "ghost": 0,
+          "missing": 0,
+          "wrong": 57
+        },
+        "drift_present": {
+          "ghost": 1,
+          "missing": 0,
+          "wrong": 57
+        },
+        "strategy": "full_id_inventory",
+        "total_detected": 1,
+        "total_missed": 57,
+        "total_present": 58
+      },
+      {
+        "calls": 20,
+        "calls_per_1000_records": 5.0,
+        "detection_per_call": 2.9,
+        "detection_rate": 1.0,
+        "drift_detected": {
+          "ghost": 1,
+          "missing": 0,
+          "wrong": 57
+        },
+        "drift_missed": {
+          "ghost": 0,
+          "missing": 0,
+          "wrong": 0
+        },
+        "drift_present": {
+          "ghost": 1,
+          "missing": 0,
+          "wrong": 57
+        },
+        "strategy": "full_field_compare",
+        "total_detected": 58,
+        "total_missed": 0,
+        "total_present": 58
+      }
+    ],
+    "beacon": [
+      {
+        "calls": 0,
+        "calls_per_1000_records": 0.0,
+        "detection_per_call": null,
+        "detection_rate": 0.0,
+        "drift_detected": {
+          "ghost": 0,
+          "missing": 0,
+          "wrong": 0
+        },
+        "drift_missed": {
+          "ghost": 124,
+          "missing": 0,
+          "wrong": 48
+        },
+        "drift_present": {
+          "ghost": 124,
+          "missing": 0,
+          "wrong": 48
+        },
+        "strategy": "none",
+        "total_detected": 0,
+        "total_missed": 172,
+        "total_present": 172
+      },
+      {
+        "calls": 1,
+        "calls_per_1000_records": 0.25,
+        "detection_per_call": 0.0,
+        "detection_rate": 0.0,
+        "drift_detected": {
+          "ghost": 0,
+          "missing": 0,
+          "wrong": 0
+        },
+        "drift_missed": {
+          "ghost": 124,
+          "missing": 0,
+          "wrong": 48
+        },
+        "drift_present": {
+          "ghost": 124,
+          "missing": 0,
+          "wrong": 48
+        },
+        "strategy": "count_check",
+        "total_detected": 0,
+        "total_missed": 172,
+        "total_present": 172
+      },
+      {
+        "calls": 77,
+        "calls_per_1000_records": 19.25,
+        "detection_per_call": 1.6104,
+        "detection_rate": 0.72093,
+        "drift_detected": {
+          "ghost": 124,
+          "missing": 0,
+          "wrong": 0
+        },
+        "drift_missed": {
+          "ghost": 0,
+          "missing": 0,
+          "wrong": 48
+        },
+        "drift_present": {
+          "ghost": 124,
+          "missing": 0,
+          "wrong": 48
+        },
+        "strategy": "partitioned_checksum",
+        "total_detected": 124,
+        "total_missed": 48,
+        "total_present": 172
+      },
+      {
+        "calls": 4,
+        "calls_per_1000_records": 1.0,
+        "detection_per_call": 31.0,
+        "detection_rate": 0.72093,
+        "drift_detected": {
+          "ghost": 124,
+          "missing": 0,
+          "wrong": 0
+        },
+        "drift_missed": {
+          "ghost": 0,
+          "missing": 0,
+          "wrong": 48
+        },
+        "drift_present": {
+          "ghost": 124,
+          "missing": 0,
+          "wrong": 48
+        },
+        "strategy": "full_id_inventory",
+        "total_detected": 124,
+        "total_missed": 48,
+        "total_present": 172
+      },
+      {
+        "calls": 39,
+        "calls_per_1000_records": 9.75,
+        "detection_per_call": 4.4103,
+        "detection_rate": 1.0,
+        "drift_detected": {
+          "ghost": 124,
+          "missing": 0,
+          "wrong": 48
+        },
+        "drift_missed": {
+          "ghost": 0,
+          "missing": 0,
+          "wrong": 0
+        },
+        "drift_present": {
+          "ghost": 124,
+          "missing": 0,
+          "wrong": 48
+        },
+        "strategy": "full_field_compare",
+        "total_detected": 172,
+        "total_missed": 0,
+        "total_present": 172
+      }
+    ]
+  }
+}

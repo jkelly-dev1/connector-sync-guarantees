@@ -1,0 +1,22 @@
+# WHAT IS DELIBERATELY TRACKED, so that a later edit has to argue with a
+# sentence before it can drop it:
+#
+#   results/*.json   THE EVIDENCE. Every number in README.md is derived from
+#                    these by scripts/check_readme_numbers.py, and the test
+#                    suite asserts against them.
+#   sim/, connector/ the simulation and the connector under test
+#   scripts/         the four experiments and the figure checker
+#
+# THERE IS NO GENERATED DATA DIRECTORY. The world is a pure function of the
+# seed and is built in memory; every results file carries the manifest sha256
+# of the world it was measured on, so a reader who re-runs can prove they hold
+# the same input rather than take it on trust.
+#
+# Excluded below is only what a clone can rebuild.
+
+envs
+.venv
+__pycache__
+.pytest_cache
+*.pyc
+.DS_Store

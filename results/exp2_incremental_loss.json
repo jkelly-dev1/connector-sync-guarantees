@@ -1,0 +1,2002 @@
+{
+  "input_manifest_sha256": "9b9f4a17c4c3141a525a79d8f5fc7dedfd6e7426df1f1df7d4c9eccbb5b47ee6",
+  "interval_seconds": 300,
+  "prediction": {
+    "best_config_wrong_records": 58,
+    "claim": "incremental sync on a modified-since watermark observes every change that happened",
+    "silent_update_miss_rate": 0.635294,
+    "verdict": "REFUTED",
+    "wrong_records_by_cause": {
+      "attributed_to_kind": {
+        "DELETE": 1,
+        "IN_FLIGHT_UPDATE": 4,
+        "SILENT_UPDATE": 45,
+        "UPDATE": 8
+      },
+      "unattributed": 0,
+      "wrong_records": 58
+    }
+  },
+  "timeline_seconds": 28800,
+  "vendors": {
+    "atlas": {
+      "ladder": [
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 1.0,
+              "missed": 81,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.23,
+              "missed": 23,
+              "reflected": 77
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.086207,
+              "missed": 5,
+              "reflected": 53
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 1.0,
+              "missed": 23,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.647059,
+              "missed": 55,
+              "reflected": 30
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.068966,
+              "missed": 58,
+              "reflected": 783
+            }
+          },
+          "calls": 117,
+          "config": {
+            "inclusive_bound": false,
+            "overlap_seconds": 0.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": false
+          },
+          "label": "naive",
+          "passes": 96,
+          "quota_share_used": 0.00117,
+          "records_returned": 4978,
+          "redundant_upserts": 0,
+          "score": {
+            "accuracy": 0.98306,
+            "correct": 3830,
+            "ghost_records": 104,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 66,
+            "upstream_live": 3896,
+            "wrong": 170
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 81,
+              "IN_FLIGHT_UPDATE": 13,
+              "MERGE": 23,
+              "SILENT_UPDATE": 45,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 170
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 1.0,
+              "missed": 81,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.23,
+              "missed": 23,
+              "reflected": 77
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.086207,
+              "missed": 5,
+              "reflected": 53
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 1.0,
+              "missed": 23,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.647059,
+              "missed": 55,
+              "reflected": 30
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.068966,
+              "missed": 58,
+              "reflected": 783
+            }
+          },
+          "calls": 117,
+          "config": {
+            "inclusive_bound": false,
+            "overlap_seconds": 0.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "label": "+tiebreaker",
+          "passes": 96,
+          "quota_share_used": 0.00117,
+          "records_returned": 4978,
+          "redundant_upserts": 0,
+          "score": {
+            "accuracy": 0.98306,
+            "correct": 3830,
+            "ghost_records": 104,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 66,
+            "upstream_live": 3896,
+            "wrong": 170
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 81,
+              "IN_FLIGHT_UPDATE": 13,
+              "MERGE": 23,
+              "SILENT_UPDATE": 45,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 170
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 1.0,
+              "missed": 81,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.23,
+              "missed": 23,
+              "reflected": 77
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.086207,
+              "missed": 5,
+              "reflected": 53
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 1.0,
+              "missed": 23,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.647059,
+              "missed": 55,
+              "reflected": 30
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.068966,
+              "missed": 58,
+              "reflected": 783
+            }
+          },
+          "calls": 117,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 0.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "label": "+inclusive_bound",
+          "passes": 96,
+          "quota_share_used": 0.00117,
+          "records_returned": 5070,
+          "redundant_upserts": 91,
+          "score": {
+            "accuracy": 0.98306,
+            "correct": 3830,
+            "ghost_records": 104,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 66,
+            "upstream_live": 3896,
+            "wrong": 170
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 81,
+              "IN_FLIGHT_UPDATE": 13,
+              "MERGE": 23,
+              "SILENT_UPDATE": 45,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 170
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 1.0,
+              "missed": 81,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.15,
+              "missed": 15,
+              "reflected": 85
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.068966,
+              "missed": 4,
+              "reflected": 54
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 1.0,
+              "missed": 23,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.635294,
+              "missed": 54,
+              "reflected": 31
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.068966,
+              "missed": 58,
+              "reflected": 783
+            }
+          },
+          "calls": 117,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 60.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "label": "+overlap_60s",
+          "passes": 96,
+          "quota_share_used": 0.00117,
+          "records_returned": 5257,
+          "redundant_upserts": 263,
+          "score": {
+            "accuracy": 0.984856,
+            "correct": 3837,
+            "ghost_records": 104,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 59,
+            "upstream_live": 3896,
+            "wrong": 163
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 81,
+              "IN_FLIGHT_UPDATE": 6,
+              "MERGE": 23,
+              "SILENT_UPDATE": 45,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 163
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 1.0,
+              "missed": 81,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.13,
+              "missed": 13,
+              "reflected": 87
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.068966,
+              "missed": 4,
+              "reflected": 54
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 1.0,
+              "missed": 23,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.635294,
+              "missed": 54,
+              "reflected": 31
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.068966,
+              "missed": 58,
+              "reflected": 783
+            }
+          },
+          "calls": 117,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 300.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "label": "+overlap_300s",
+          "passes": 96,
+          "quota_share_used": 0.00117,
+          "records_returned": 6033,
+          "redundant_upserts": 1034,
+          "score": {
+            "accuracy": 0.98537,
+            "correct": 3839,
+            "ghost_records": 104,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 57,
+            "upstream_live": 3896,
+            "wrong": 161
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 81,
+              "IN_FLIGHT_UPDATE": 4,
+              "MERGE": 23,
+              "SILENT_UPDATE": 45,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 161
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 0.012346,
+              "missed": 1,
+              "reflected": 80
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.13,
+              "missed": 13,
+              "reflected": 87
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.068966,
+              "missed": 4,
+              "reflected": 54
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 23
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.635294,
+              "missed": 54,
+              "reflected": 31
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.068966,
+              "missed": 58,
+              "reflected": 783
+            }
+          },
+          "calls": 213,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 300.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": true,
+            "use_tiebreaker": true
+          },
+          "label": "+deletes_api",
+          "passes": 96,
+          "quota_share_used": 0.00213,
+          "records_returned": 6243,
+          "redundant_upserts": 1032,
+          "score": {
+            "accuracy": 0.98537,
+            "correct": 3839,
+            "ghost_records": 1,
+            "local_live": 3897,
+            "missing": 0,
+            "stale": 57,
+            "upstream_live": 3896,
+            "wrong": 58
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 1,
+              "IN_FLIGHT_UPDATE": 4,
+              "SILENT_UPDATE": 45,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 58
+          }
+        }
+      ],
+      "overlap_sweep": [
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 1.0,
+              "missed": 81,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.23,
+              "missed": 23,
+              "reflected": 77
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.086207,
+              "missed": 5,
+              "reflected": 53
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 1.0,
+              "missed": 23,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.647059,
+              "missed": 55,
+              "reflected": 30
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.068966,
+              "missed": 58,
+              "reflected": 783
+            }
+          },
+          "calls": 117,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 0.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 0.0,
+          "passes": 96,
+          "quota_share_used": 0.00117,
+          "records_returned": 5070,
+          "redundant_upserts": 91,
+          "score": {
+            "accuracy": 0.98306,
+            "correct": 3830,
+            "ghost_records": 104,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 66,
+            "upstream_live": 3896,
+            "wrong": 170
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 81,
+              "IN_FLIGHT_UPDATE": 13,
+              "MERGE": 23,
+              "SILENT_UPDATE": 45,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 170
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 1.0,
+              "missed": 81,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.18,
+              "missed": 18,
+              "reflected": 82
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.068966,
+              "missed": 4,
+              "reflected": 54
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 1.0,
+              "missed": 23,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.635294,
+              "missed": 54,
+              "reflected": 31
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.068966,
+              "missed": 58,
+              "reflected": 783
+            }
+          },
+          "calls": 117,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 30.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 30.0,
+          "passes": 96,
+          "quota_share_used": 0.00117,
+          "records_returned": 5158,
+          "redundant_upserts": 171,
+          "score": {
+            "accuracy": 0.984086,
+            "correct": 3834,
+            "ghost_records": 104,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 62,
+            "upstream_live": 3896,
+            "wrong": 166
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 81,
+              "IN_FLIGHT_UPDATE": 9,
+              "MERGE": 23,
+              "SILENT_UPDATE": 45,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 166
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 1.0,
+              "missed": 81,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.15,
+              "missed": 15,
+              "reflected": 85
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.068966,
+              "missed": 4,
+              "reflected": 54
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 1.0,
+              "missed": 23,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.635294,
+              "missed": 54,
+              "reflected": 31
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.068966,
+              "missed": 58,
+              "reflected": 783
+            }
+          },
+          "calls": 117,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 60.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 60.0,
+          "passes": 96,
+          "quota_share_used": 0.00117,
+          "records_returned": 5257,
+          "redundant_upserts": 263,
+          "score": {
+            "accuracy": 0.984856,
+            "correct": 3837,
+            "ghost_records": 104,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 59,
+            "upstream_live": 3896,
+            "wrong": 163
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 81,
+              "IN_FLIGHT_UPDATE": 6,
+              "MERGE": 23,
+              "SILENT_UPDATE": 45,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 163
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 1.0,
+              "missed": 81,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.13,
+              "missed": 13,
+              "reflected": 87
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.068966,
+              "missed": 4,
+              "reflected": 54
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 1.0,
+              "missed": 23,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.635294,
+              "missed": 54,
+              "reflected": 31
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.068966,
+              "missed": 58,
+              "reflected": 783
+            }
+          },
+          "calls": 117,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 120.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 120.0,
+          "passes": 96,
+          "quota_share_used": 0.00117,
+          "records_returned": 5470,
+          "redundant_upserts": 473,
+          "score": {
+            "accuracy": 0.98537,
+            "correct": 3839,
+            "ghost_records": 104,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 57,
+            "upstream_live": 3896,
+            "wrong": 161
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 81,
+              "IN_FLIGHT_UPDATE": 4,
+              "MERGE": 23,
+              "SILENT_UPDATE": 45,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 161
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 1.0,
+              "missed": 81,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.13,
+              "missed": 13,
+              "reflected": 87
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.068966,
+              "missed": 4,
+              "reflected": 54
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 1.0,
+              "missed": 23,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.635294,
+              "missed": 54,
+              "reflected": 31
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.068966,
+              "missed": 58,
+              "reflected": 783
+            }
+          },
+          "calls": 117,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 300.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 300.0,
+          "passes": 96,
+          "quota_share_used": 0.00117,
+          "records_returned": 6033,
+          "redundant_upserts": 1034,
+          "score": {
+            "accuracy": 0.98537,
+            "correct": 3839,
+            "ghost_records": 104,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 57,
+            "upstream_live": 3896,
+            "wrong": 161
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 81,
+              "IN_FLIGHT_UPDATE": 4,
+              "MERGE": 23,
+              "SILENT_UPDATE": 45,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 161
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 1.0,
+              "missed": 81,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.13,
+              "missed": 13,
+              "reflected": 87
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.051724,
+              "missed": 3,
+              "reflected": 55
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 1.0,
+              "missed": 23,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.623529,
+              "missed": 53,
+              "reflected": 32
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.065398,
+              "missed": 55,
+              "reflected": 786
+            }
+          },
+          "calls": 117,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 600.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 600.0,
+          "passes": 96,
+          "quota_share_used": 0.00117,
+          "records_returned": 6960,
+          "redundant_upserts": 1960,
+          "score": {
+            "accuracy": 0.985626,
+            "correct": 3840,
+            "ghost_records": 104,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 56,
+            "upstream_live": 3896,
+            "wrong": 160
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 81,
+              "IN_FLIGHT_UPDATE": 4,
+              "MERGE": 23,
+              "SILENT_UPDATE": 44,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 160
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 81,
+              "miss_rate": 1.0,
+              "missed": 81,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 100,
+              "miss_rate": 0.12,
+              "missed": 12,
+              "reflected": 88
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 58,
+              "miss_rate": 0.051724,
+              "missed": 3,
+              "reflected": 55
+            },
+            "MERGE": {
+              "happened": 23,
+              "miss_rate": 1.0,
+              "missed": 23,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 85,
+              "miss_rate": 0.611765,
+              "missed": 52,
+              "reflected": 33
+            },
+            "UPDATE": {
+              "happened": 841,
+              "miss_rate": 0.061831,
+              "missed": 52,
+              "reflected": 789
+            }
+          },
+          "calls": 117,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 1800.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 1800.0,
+          "passes": 96,
+          "quota_share_used": 0.00117,
+          "records_returned": 10479,
+          "redundant_upserts": 5474,
+          "score": {
+            "accuracy": 0.985626,
+            "correct": 3840,
+            "ghost_records": 104,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 56,
+            "upstream_live": 3896,
+            "wrong": 160
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 81,
+              "IN_FLIGHT_UPDATE": 4,
+              "MERGE": 23,
+              "SILENT_UPDATE": 44,
+              "UPDATE": 8
+            },
+            "unattributed": 0,
+            "wrong_records": 160
+          }
+        }
+      ]
+    },
+    "beacon": {
+      "ladder": [
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 1.0,
+              "missed": 92,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.072289,
+              "missed": 6,
+              "reflected": 77
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 57
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 1.0,
+              "missed": 32,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.58209,
+              "missed": 39,
+              "reflected": 28
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.022093,
+              "missed": 19,
+              "reflected": 841
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": false,
+            "overlap_seconds": 0.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": false
+          },
+          "label": "naive",
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 5121,
+          "redundant_upserts": 116,
+          "score": {
+            "accuracy": 0.986326,
+            "correct": 3823,
+            "ghost_records": 124,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 53,
+            "upstream_live": 3876,
+            "wrong": 177
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 92,
+              "IN_FLIGHT_UPDATE": 5,
+              "MERGE": 32,
+              "SILENT_UPDATE": 39,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 177
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 1.0,
+              "missed": 92,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.072289,
+              "missed": 6,
+              "reflected": 77
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 57
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 1.0,
+              "missed": 32,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.58209,
+              "missed": 39,
+              "reflected": 28
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.022093,
+              "missed": 19,
+              "reflected": 841
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": false,
+            "overlap_seconds": 0.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "label": "+tiebreaker",
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 5121,
+          "redundant_upserts": 116,
+          "score": {
+            "accuracy": 0.986326,
+            "correct": 3823,
+            "ghost_records": 124,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 53,
+            "upstream_live": 3876,
+            "wrong": 177
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 92,
+              "IN_FLIGHT_UPDATE": 5,
+              "MERGE": 32,
+              "SILENT_UPDATE": 39,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 177
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 1.0,
+              "missed": 92,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.072289,
+              "missed": 6,
+              "reflected": 77
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 57
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 1.0,
+              "missed": 32,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.58209,
+              "missed": 39,
+              "reflected": 28
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.022093,
+              "missed": 19,
+              "reflected": 841
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 0.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "label": "+inclusive_bound",
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 5215,
+          "redundant_upserts": 210,
+          "score": {
+            "accuracy": 0.986326,
+            "correct": 3823,
+            "ghost_records": 124,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 53,
+            "upstream_live": 3876,
+            "wrong": 177
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 92,
+              "IN_FLIGHT_UPDATE": 5,
+              "MERGE": 32,
+              "SILENT_UPDATE": 39,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 177
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 1.0,
+              "missed": 92,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.012048,
+              "missed": 1,
+              "reflected": 82
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 57
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 1.0,
+              "missed": 32,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.58209,
+              "missed": 39,
+              "reflected": 28
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.019767,
+              "missed": 17,
+              "reflected": 843
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 60.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "label": "+overlap_60s",
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 5456,
+          "redundant_upserts": 442,
+          "score": {
+            "accuracy": 0.987616,
+            "correct": 3828,
+            "ghost_records": 124,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 48,
+            "upstream_live": 3876,
+            "wrong": 172
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 92,
+              "MERGE": 32,
+              "SILENT_UPDATE": 39,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 172
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 1.0,
+              "missed": 92,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.012048,
+              "missed": 1,
+              "reflected": 82
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 57
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 1.0,
+              "missed": 32,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.58209,
+              "missed": 39,
+              "reflected": 28
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.019767,
+              "missed": 17,
+              "reflected": 843
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 300.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "label": "+overlap_300s",
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 6344,
+          "redundant_upserts": 1329,
+          "score": {
+            "accuracy": 0.987616,
+            "correct": 3828,
+            "ghost_records": 124,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 48,
+            "upstream_live": 3876,
+            "wrong": 172
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 92,
+              "MERGE": 32,
+              "SILENT_UPDATE": 39,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 172
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 0.021739,
+              "missed": 2,
+              "reflected": 90
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.060241,
+              "missed": 5,
+              "reflected": 78
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.017544,
+              "missed": 1,
+              "reflected": 56
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 0.03125,
+              "missed": 1,
+              "reflected": 31
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.716418,
+              "missed": 48,
+              "reflected": 19
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.030233,
+              "missed": 26,
+              "reflected": 834
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 300.0,
+            "page_size": 200,
+            "scan_archived": true,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "label": "+scan_archived",
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 6344,
+          "redundant_upserts": 1074,
+          "score": {
+            "accuracy": 0.987616,
+            "correct": 3828,
+            "ghost_records": 3,
+            "local_live": 3879,
+            "missing": 0,
+            "stale": 48,
+            "upstream_live": 3876,
+            "wrong": 51
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 2,
+              "MERGE": 1,
+              "SILENT_UPDATE": 39,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 51
+          }
+        }
+      ],
+      "overlap_sweep": [
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 1.0,
+              "missed": 92,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.072289,
+              "missed": 6,
+              "reflected": 77
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 57
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 1.0,
+              "missed": 32,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.58209,
+              "missed": 39,
+              "reflected": 28
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.022093,
+              "missed": 19,
+              "reflected": 841
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 0.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 0.0,
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 5215,
+          "redundant_upserts": 210,
+          "score": {
+            "accuracy": 0.986326,
+            "correct": 3823,
+            "ghost_records": 124,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 53,
+            "upstream_live": 3876,
+            "wrong": 177
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 92,
+              "IN_FLIGHT_UPDATE": 5,
+              "MERGE": 32,
+              "SILENT_UPDATE": 39,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 177
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 1.0,
+              "missed": 92,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.036145,
+              "missed": 3,
+              "reflected": 80
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 57
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 1.0,
+              "missed": 32,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.58209,
+              "missed": 39,
+              "reflected": 28
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.02093,
+              "missed": 18,
+              "reflected": 842
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 30.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 30.0,
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 5348,
+          "redundant_upserts": 338,
+          "score": {
+            "accuracy": 0.9871,
+            "correct": 3826,
+            "ghost_records": 124,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 50,
+            "upstream_live": 3876,
+            "wrong": 174
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 92,
+              "IN_FLIGHT_UPDATE": 2,
+              "MERGE": 32,
+              "SILENT_UPDATE": 39,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 174
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 1.0,
+              "missed": 92,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.012048,
+              "missed": 1,
+              "reflected": 82
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 57
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 1.0,
+              "missed": 32,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.58209,
+              "missed": 39,
+              "reflected": 28
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.019767,
+              "missed": 17,
+              "reflected": 843
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 60.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 60.0,
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 5456,
+          "redundant_upserts": 442,
+          "score": {
+            "accuracy": 0.987616,
+            "correct": 3828,
+            "ghost_records": 124,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 48,
+            "upstream_live": 3876,
+            "wrong": 172
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 92,
+              "MERGE": 32,
+              "SILENT_UPDATE": 39,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 172
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 1.0,
+              "missed": 92,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.012048,
+              "missed": 1,
+              "reflected": 82
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 57
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 1.0,
+              "missed": 32,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.58209,
+              "missed": 39,
+              "reflected": 28
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.019767,
+              "missed": 17,
+              "reflected": 843
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 120.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 120.0,
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 5660,
+          "redundant_upserts": 645,
+          "score": {
+            "accuracy": 0.987616,
+            "correct": 3828,
+            "ghost_records": 124,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 48,
+            "upstream_live": 3876,
+            "wrong": 172
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 92,
+              "MERGE": 32,
+              "SILENT_UPDATE": 39,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 172
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 1.0,
+              "missed": 92,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.012048,
+              "missed": 1,
+              "reflected": 82
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 57
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 1.0,
+              "missed": 32,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.58209,
+              "missed": 39,
+              "reflected": 28
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.019767,
+              "missed": 17,
+              "reflected": 843
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 300.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 300.0,
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 6344,
+          "redundant_upserts": 1329,
+          "score": {
+            "accuracy": 0.987616,
+            "correct": 3828,
+            "ghost_records": 124,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 48,
+            "upstream_live": 3876,
+            "wrong": 172
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 92,
+              "MERGE": 32,
+              "SILENT_UPDATE": 39,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 172
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 1.0,
+              "missed": 92,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.012048,
+              "missed": 1,
+              "reflected": 82
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 57
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 1.0,
+              "missed": 32,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.58209,
+              "missed": 39,
+              "reflected": 28
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.019767,
+              "missed": 17,
+              "reflected": 843
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 600.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 600.0,
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 7418,
+          "redundant_upserts": 2401,
+          "score": {
+            "accuracy": 0.987616,
+            "correct": 3828,
+            "ghost_records": 124,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 48,
+            "upstream_live": 3876,
+            "wrong": 172
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 92,
+              "MERGE": 32,
+              "SILENT_UPDATE": 39,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 172
+          }
+        },
+        {
+          "by_mutation_kind": {
+            "DELETE": {
+              "happened": 92,
+              "miss_rate": 1.0,
+              "missed": 92,
+              "reflected": 0
+            },
+            "IN_FLIGHT_UPDATE": {
+              "happened": 83,
+              "miss_rate": 0.012048,
+              "missed": 1,
+              "reflected": 82
+            },
+            "LATE_CLOCK_UPDATE": {
+              "happened": 57,
+              "miss_rate": 0.0,
+              "missed": 0,
+              "reflected": 57
+            },
+            "MERGE": {
+              "happened": 32,
+              "miss_rate": 1.0,
+              "missed": 32,
+              "reflected": 0
+            },
+            "SILENT_UPDATE": {
+              "happened": 67,
+              "miss_rate": 0.567164,
+              "missed": 38,
+              "reflected": 29
+            },
+            "UPDATE": {
+              "happened": 860,
+              "miss_rate": 0.018605,
+              "missed": 16,
+              "reflected": 844
+            }
+          },
+          "calls": 137,
+          "config": {
+            "inclusive_bound": true,
+            "overlap_seconds": 1800.0,
+            "page_size": 200,
+            "scan_archived": false,
+            "use_deletes_api": false,
+            "use_tiebreaker": true
+          },
+          "overlap_seconds": 1800.0,
+          "passes": 96,
+          "quota_share_used": 0.000548,
+          "records_returned": 11454,
+          "redundant_upserts": 6431,
+          "score": {
+            "accuracy": 0.987874,
+            "correct": 3829,
+            "ghost_records": 124,
+            "local_live": 4000,
+            "missing": 0,
+            "stale": 47,
+            "upstream_live": 3876,
+            "wrong": 171
+          },
+          "simulated_seconds": 28800.0,
+          "wrong_records_by_cause": {
+            "attributed_to_kind": {
+              "DELETE": 92,
+              "MERGE": 32,
+              "SILENT_UPDATE": 38,
+              "UPDATE": 8
+            },
+            "unattributed": 1,
+            "wrong_records": 171
+          }
+        }
+      ]
+    }
+  }
+}

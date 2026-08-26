@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # This repository has no runtime dependencies at all. There is no
+      # container, no database, no service and no network: the whole thing is
+      # a simulation in one Python process. CI installs pytest and runs
+      # everything, including the experiments themselves if it wants to; they
+      # finish in under a minute and reproduce byte for byte.
+      - name: Install pytest only
+        run: |
+          python -m pip install --upgrade pip
+          pip install "pytest>=8,<10"
+
+      - run: python -m pytest -q
+
+      # Regenerate the evidence and refuse any diff.
+      #
+      # Of the suite, 38 tests assert over results/*.json, which are committed
+      # artifacts. Without this step a change to the simulation, the connector
+      # or an experiment script leaves every one of those tests reading the
+      # OLD file and passing, so the suite reports green on code that no
+      # longer produces the published numbers. The invariants have teeth only
+      # against a fresh run, and nothing was performing one.
+      #
+      # This is cheap because the whole thing is deterministic: no clock, no
+      # network, no container, a seeded world, and all four experiments finish
+      # in about five seconds reproducing byte for byte.
+      - name: Experiments regenerate the shipped results exactly
+        run: |
+          for s in exp1_rate_limits exp2_incremental_loss \
+                   exp3_webhooks_vs_polling exp4_reconciliation; do
+            python scripts/$s.py > /dev/null
+          done
+          git diff --exit-code results/
+
+      # Every number in the README is re-derived from results/*.json and must
+      # appear verbatim. A re-run that shifts a figure fails here rather than
+      # leaving the document quietly wrong.
+      - name: README numbers match the shipped results
+        run: python scripts/check_readme_numbers.py

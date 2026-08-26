@@ -1,0 +1,221 @@
+{
+  "access_patterns": {
+    "cap_bound": [
+      {
+        "calls": 21,
+        "completed": true,
+        "pattern": "paged_scan",
+        "records": 4000,
+        "simulated_seconds": 7.45
+      },
+      {
+        "calls": 100,
+        "completed": false,
+        "pattern": "paged_scan_plus_detail_fetch",
+        "records": 4000,
+        "simulated_seconds": 39.45
+      },
+      {
+        "calls": 1,
+        "completed": true,
+        "pattern": "bulk_export",
+        "records": 3999,
+        "simulated_seconds": 900.05
+      }
+    ],
+    "rate_bound": [
+      {
+        "calls": 21,
+        "completed": true,
+        "pattern": "paged_scan",
+        "records": 4000,
+        "simulated_seconds": 7.45
+      },
+      {
+        "calls": 4021,
+        "completed": true,
+        "pattern": "paged_scan_plus_detail_fetch",
+        "records": 4000,
+        "simulated_seconds": 1607.45
+      },
+      {
+        "calls": 1,
+        "completed": true,
+        "pattern": "bulk_export",
+        "records": 3999,
+        "simulated_seconds": 900.05
+      }
+    ]
+  },
+  "input_manifest_sha256": "9b9f4a17c4c3141a525a79d8f5fc7dedfd6e7426df1f1df7d4c9eccbb5b47ee6",
+  "prediction": {
+    "cap_bound_strategies_completed": [],
+    "cap_bound_strategies_total": 4,
+    "claim": "a smarter client-side limiter completes the backfill faster",
+    "fastest_strategy": "naive",
+    "n_plus_one_call_multiple": 191.5,
+    "rate_bound_did_not_finish": [],
+    "rate_bound_spread": 1.376,
+    "rate_bound_spread_including_naive": 1.94,
+    "slowest_strategy": "fixed_sleep",
+    "verdict": "QUALIFIED"
+  },
+  "scenarios": {
+    "cap_bound": {
+      "runs": [
+        {
+          "calls": 100,
+          "calls_throttled": 76,
+          "completed": false,
+          "limiter": {
+            "strategy": "naive",
+            "total_wait_seconds": 0.0,
+            "waits": 75
+          },
+          "quota_share_used": 1.01,
+          "quota_used": 101,
+          "records_held": 500,
+          "simulated_seconds": 5.05,
+          "strategy": "naive",
+          "throttle_events": 75
+        },
+        {
+          "calls": 100,
+          "calls_throttled": 1,
+          "completed": false,
+          "limiter": {
+            "strategy": "fixed_sleep",
+            "total_wait_seconds": 35.0,
+            "waits": 100
+          },
+          "quota_share_used": 1.01,
+          "quota_used": 101,
+          "records_held": 2000,
+          "simulated_seconds": 40.05,
+          "strategy": "fixed_sleep",
+          "throttle_events": 0
+        },
+        {
+          "calls": 100,
+          "calls_throttled": 1,
+          "completed": false,
+          "limiter": {
+            "capacity": 2.5,
+            "rate": 2.5,
+            "strategy": "token_bucket",
+            "total_wait_seconds": 34.4,
+            "waits": 99
+          },
+          "quota_share_used": 1.01,
+          "quota_used": 101,
+          "records_held": 2000,
+          "simulated_seconds": 39.45,
+          "strategy": "token_bucket",
+          "throttle_events": 0
+        },
+        {
+          "calls": 100,
+          "calls_throttled": 8,
+          "completed": false,
+          "limiter": {
+            "decreases": 7,
+            "final_rate": 5.0,
+            "min_rate_seen": 1.25,
+            "strategy": "aimd",
+            "total_wait_seconds": 20.239,
+            "waits": 108
+          },
+          "quota_share_used": 1.01,
+          "quota_used": 101,
+          "records_held": 1860,
+          "simulated_seconds": 25.29,
+          "strategy": "aimd",
+          "throttle_events": 7
+        }
+      ],
+      "vendor_config": {
+        "daily_allowance": 100,
+        "page_size": 20,
+        "per_second_limit": 5.0
+      }
+    },
+    "rate_bound": {
+      "runs": [
+        {
+          "calls": 83,
+          "calls_throttled": 62,
+          "completed": true,
+          "limiter": {
+            "strategy": "naive",
+            "total_wait_seconds": 0.0,
+            "waits": 62
+          },
+          "quota_share_used": 0.00083,
+          "quota_used": 83,
+          "records_held": 4000,
+          "simulated_seconds": 4.15,
+          "strategy": "naive",
+          "throttle_events": 62
+        },
+        {
+          "calls": 21,
+          "calls_throttled": 0,
+          "completed": true,
+          "limiter": {
+            "strategy": "fixed_sleep",
+            "total_wait_seconds": 7.0,
+            "waits": 20
+          },
+          "quota_share_used": 0.00021,
+          "quota_used": 21,
+          "records_held": 4000,
+          "simulated_seconds": 8.05,
+          "strategy": "fixed_sleep",
+          "throttle_events": 0
+        },
+        {
+          "calls": 21,
+          "calls_throttled": 0,
+          "completed": true,
+          "limiter": {
+            "capacity": 2.5,
+            "rate": 2.5,
+            "strategy": "token_bucket",
+            "total_wait_seconds": 6.4,
+            "waits": 19
+          },
+          "quota_share_used": 0.00021,
+          "quota_used": 21,
+          "records_held": 4000,
+          "simulated_seconds": 7.45,
+          "strategy": "token_bucket",
+          "throttle_events": 0
+        },
+        {
+          "calls": 21,
+          "calls_throttled": 0,
+          "completed": true,
+          "limiter": {
+            "decreases": 0,
+            "final_rate": 5.0,
+            "min_rate_seen": 1.25,
+            "strategy": "aimd",
+            "total_wait_seconds": 4.8,
+            "waits": 21
+          },
+          "quota_share_used": 0.00021,
+          "quota_used": 21,
+          "records_held": 4000,
+          "simulated_seconds": 5.85,
+          "strategy": "aimd",
+          "throttle_events": 0
+        }
+      ],
+      "vendor_config": {
+        "daily_allowance": 100000,
+        "page_size": 200,
+        "per_second_limit": 5.0
+      }
+    }
+  }
+}

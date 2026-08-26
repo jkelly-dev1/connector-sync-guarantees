@@ -1,0 +1,1 @@
+Incremental sync on a modified-since timestamp is lossy by construction, measured against a world where every change is known. What a rate limit really costs, which losses no overlap can recover, what webhooks fix and what they hide, and which reconciliation strategy is the only one that sees a silently wrong value.
