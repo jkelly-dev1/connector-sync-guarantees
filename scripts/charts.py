@@ -89,7 +89,7 @@ def bar_chart(rows, caption=None, width=WIDTH, fill=FILL):
 
 
 # ---------------------------------------------------------------------------
-# THE CHARTS THE README CARRIES. Each one returns a block of text that
+# The charts the README carries. Each one returns a block of text that
 # check_readme_numbers.py requires verbatim, so this list and the README
 # cannot disagree without the check going red.
 # ---------------------------------------------------------------------------
@@ -128,11 +128,20 @@ def chart_e2_ghost_records():
                 "+deletes_api": "+ deletes endpoint"}
     rows = []
     for r in e2["vendors"]["atlas"]["ladder"]:
+        # An unknown rung is an ERROR, not something to skip past. Skipping it
+        # drew a chart that looked complete while silently omitting a whole
+        # mitigation, and drew exactly the same chart it draws for a clean run,
+        # so nothing anywhere would have said which one was missing.
         if r["label"] not in label_of:
-            continue
+            raise KeyError(
+                "ladder rung %r has no chart label; add one to label_of rather "
+                "than letting the chart omit it silently" % (r["label"],))
         g = int(r["score"]["ghost_records"])
         rows.append((label_of[r["label"]], g,
                      _plural(g, "ghost record")))
+    if len(rows) != len(label_of):
+        raise ValueError("the ghost chart drew %d of %d expected rungs"
+                         % (len(rows), len(label_of)))
     return bar_chart(rows, "ghost records still present")
 
 

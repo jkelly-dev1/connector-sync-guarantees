@@ -286,6 +286,23 @@ The webhook-to-poll delta is 58: the number of changes the poll caught that the
 webhook path did not deliver first. That single metric is how much your webhook
 channel can be trusted, and almost nobody measures it.
 
+### The same connector against the other vendor
+
+The table above is Atlas. Beacon's poll alone misses 55 of 1,191 changes, and
+the reason is the asymmetry section 2 measured: archived rows stay in the
+ordinary scan, so deletion detection falls out of the scan the connector was
+running anyway. Add webhooks to it and the arm misses 0 and holds 0 ghost
+records, reflecting 124 of 124 deletions. That is the only fully correct
+configuration in this repository, and it is a property of the vendor's delete
+semantics rather than of anything clever in the connector.
+
+It is also where a shared configuration literal does real damage. Handing
+Beacon the `use_deletes_api` setting that is correct for Atlas does harm:
+Beacon has no such endpoint, the call raises, the connector swallows the
+exception, and the arm detects none of its deletions while every label in the
+code still calls it the correctly configured poll. Each vendor is asked for
+its own poll configuration, and a test asserts that it got one.
+
 ## 4. What reconciliation costs and what it catches
 
 Five strategies against the drift the best incremental configuration leaves
@@ -357,8 +374,14 @@ byte-for-byte identical, which is what the simulated clock is for.
 pip install pytest
 python -m pytest -q
 python3 scripts/check_readme_numbers.py
+python3 scripts/check_sample_run.py
 python3 scripts/charts.py
 ```
+
+`check_sample_run.py` re-runs every command `SAMPLE_RUN.md` transcribes and
+requires the same output. That file says at the top that no output in it was
+altered, which is a claim about this tree like any other, so it is checked
+like any other.
 
 ## Claims backed by tests
 
@@ -376,7 +399,7 @@ The rows the results depend on are mutation-checked and say so.
 | The clock refuses to run backward | `tests/test_sim.py::test_the_clock_refuses_to_go_backward` |
 | A skewed vendor clock reports a different now | `tests/test_sim.py::test_a_skewed_clock_reports_a_different_now` |
 | The world is a pure function of the seed | `tests/test_sim.py::test_the_world_is_a_pure_function_of_the_seed` |
-| Nothing in the generator reads the clock or a random stream | `tests/test_sim.py::test_nothing_in_the_generator_reads_the_clock_or_a_random_stream` |
+| Nothing in the simulation reads the clock or a random stream, in any module (mutation-checked: `from time import time` in the vendor, which a substring search cannot see) | `tests/test_sim.py::test_nothing_in_the_simulation_reads_the_clock_or_a_random_stream` |
 | No mutation carries a timestamp from the future (mutation-checked: build the timeline in sequence order and the watermark jumps to the end of the run) | `tests/test_sim.py::test_no_mutation_carries_a_timestamp_from_the_future` |
 | A silent update does not advance the stamp | `tests/test_sim.py::test_a_silent_update_does_not_advance_the_stamp` |
 | A late-clock update is stamped behind its moment | `tests/test_sim.py::test_a_late_clock_update_is_stamped_behind_its_moment` |
@@ -386,7 +409,10 @@ The rows the results depend on are mutation-checked and say so.
 | A daily cap raises a different exception from a rate limit | `tests/test_sim.py::test_a_daily_cap_raises_a_different_exception_from_a_rate_limit` |
 | Atlas hard-deletes and Beacon archives | `tests/test_sim.py::test_atlas_hard_deletes_and_beacon_archives` |
 | The deletes endpoint forgets beyond its retention window | `tests/test_sim.py::test_the_deletes_endpoint_forgets_beyond_its_retention_window` |
-| The scan orders by timestamp then id | `tests/test_sim.py::test_the_scan_orders_by_timestamp_then_id` |
+| The scan breaks a tie by id and not by insertion order (mutation-checked: sort by timestamp alone; the fixture carries a real tie group, because a stable sort over an id-ordered fixture hides the bug) | `tests/test_sim.py::test_the_scan_breaks_a_tie_by_id_and_not_by_insertion_order` |
+| Paging across a tie group returns every record exactly once | `tests/test_sim.py::test_paging_across_a_tie_group_returns_every_record_exactly_once` |
+| A by-id fetch does not hand back a deleted record (mutation-checked: return the tombstone and the webhook arm re-upserts every deleted record as live) | `tests/test_sim.py::test_a_by_id_fetch_does_not_hand_back_a_deleted_record` |
+| A by-id fetch does not hand back an archived record | `tests/test_sim.py::test_a_by_id_fetch_does_not_hand_back_an_archived_record` |
 | Beacon's search truncates silently at its ceiling | `tests/test_sim.py::test_beacon_search_truncates_silently_at_its_ceiling` |
 | A token bucket paces to its rate and permits a burst | `tests/test_sim.py::test_a_token_bucket_paces_to_its_rate` |
 | AIMD decreases multiplicatively and increases additively | `tests/test_sim.py::test_aimd_decreases_multiplicatively_and_increases_additively` |
@@ -396,6 +422,8 @@ The rows the results depend on are mutation-checked and say so.
 | The watermark is set from the START of the backfill | `tests/test_connector.py::test_the_watermark_is_set_from_the_START_of_the_backfill` |
 | An incremental pass advances the watermark only to what it saw | `tests/test_connector.py::test_an_incremental_pass_advances_the_watermark_only_to_what_it_saw` |
 | A quota exhaustion during backfill is not retried forever | `tests/test_connector.py::test_a_quota_exhaustion_during_backfill_is_not_retried_forever` |
+| An interrupted backfill leaves no watermark behind (mutation-checked: set it anyway and every unfetched record falls permanently below the incremental bound) | `tests/test_connector.py::test_an_interrupted_backfill_leaves_no_watermark_behind` |
+| The records an interrupted backfill missed are still reachable | `tests/test_connector.py::test_the_records_an_interrupted_backfill_missed_are_still_reachable` |
 | A silent update is never reflected by a watermark scan | `tests/test_connector.py::test_a_silent_update_is_never_reflected_by_a_watermark_scan` |
 | Pacing helps under a rate ceiling | `tests/test_results_invariants.py::test_pacing_helps_under_a_rate_ceiling` |
 | The naive limiter wastes calls it did not need (mutation-checked: make rejected calls free and naive looks strictly better) | `tests/test_results_invariants.py::test_the_naive_limiter_wastes_calls_it_did_not_need` |
@@ -403,6 +431,7 @@ The rows the results depend on are mutation-checked and say so.
 | The access pattern dominates the limiter choice | `tests/test_results_invariants.py::test_the_access_pattern_dominates_the_limiter_choice` |
 | The bulk path trades calls for latency | `tests/test_results_invariants.py::test_the_bulk_path_trades_calls_for_latency` |
 | The N+1 pattern cannot fit under the cap | `tests/test_results_invariants.py::test_the_n_plus_one_pattern_cannot_fit_under_the_cap` |
+| Every access pattern can report that it did not finish (mutation-checked: `backfill()` swallows the quota error, so an arm that reads only the exception can never say no) | `tests/test_results_invariants.py::test_every_access_pattern_can_report_that_it_did_not_finish` |
 | Incremental sync does not catch everything | `tests/test_results_invariants.py::test_incremental_sync_does_not_catch_everything` |
 | A silent update is missed at every setting | `tests/test_results_invariants.py::test_a_silent_update_is_missed_at_every_setting` |
 | Only a deletes mechanism removes ghost records | `tests/test_results_invariants.py::test_only_a_deletes_mechanism_removes_ghost_records` |
@@ -414,11 +443,15 @@ The rows the results depend on are mutation-checked and say so.
 | Webhooks plus polling beats either alone | `tests/test_results_invariants.py::test_webhooks_plus_polling_beats_either_alone` |
 | A receiver outage permanently disables the subscription | `tests/test_results_invariants.py::test_a_receiver_outage_permanently_disables_the_subscription` |
 | The webhook-to-poll delta is published | `tests/test_results_invariants.py::test_the_webhook_to_poll_delta_is_published` |
+| No arm credits a deletion its own store does not reflect (mutation-checked: with the tombstone returned by id and deliveries credited on arrival, the webhook arms report 97 credited against 0 reflected) | `tests/test_results_invariants.py::test_no_arm_credits_a_deletion_its_own_store_does_not_reflect` |
+| A webhook-only arm learns its deletions from a NOT FOUND | `tests/test_results_invariants.py::test_a_webhook_only_arm_learns_its_deletions_from_a_not_found` |
+| Each vendor is polled with its own delete mechanism | `tests/test_results_invariants.py::test_each_vendor_is_polled_with_its_own_delete_mechanism` |
 | A count check catches essentially nothing | `tests/test_results_invariants.py::test_a_count_check_catches_essentially_nothing` |
 | Only a field comparison sees a silently wrong value | `tests/test_results_invariants.py::test_only_a_field_comparison_sees_a_silently_wrong_value` |
 | A full field comparison detects everything | `tests/test_results_invariants.py::test_a_full_field_comparison_detects_everything` |
 | Drift is dominated by wrong values, not missing records | `tests/test_results_invariants.py::test_drift_is_dominated_by_wrong_values_not_missing_records` |
 | All four experiments measured the same generated world | `tests/test_results_invariants.py::test_all_four_experiments_measured_the_same_generated_world` |
+| Every test this table names actually exists (mutation-checked: rename a cited test and this names the row) | `tests/test_documented_claims.py::test_every_test_the_readme_names_actually_exists` |
 
 ## What this does not measure
 
@@ -437,6 +470,14 @@ The rows the results depend on are mutation-checked and say so.
   reconciliation cost ordering in section 4 is explicitly scale-dependent.
 - **No real authentication.** Token lifecycle is not modeled at all; no OAuth
   handshake happens against anything.
+- **Two modeled surfaces that no experiment exercises.** `sim/clock.py`'s
+  `Skew` class and Beacon's `search_modified_since` endpoint are implemented
+  and unit-tested, and nothing in experiments 1 to 4 calls either. The clock
+  skew still reaches the results, as the constant the `LATE_CLOCK_UPDATE`
+  timestamps are built from; the `Skew` wrapper is the reusable form of it and
+  is not on that path. The search ceiling is described in the vendor table as a
+  PROPERTY of Beacon and is not a measurement: no published figure depends on
+  it, and none claims to.
 - **Not evidence of CRM domain experience.** The setting is chosen because it
   makes the constraints concrete.
 

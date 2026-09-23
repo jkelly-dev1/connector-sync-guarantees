@@ -5,10 +5,18 @@
   "outage_from": 7200.0,
   "outage_until": 10800.0,
   "poll_config": {
-    "inclusive_bound": true,
-    "overlap_seconds": 120.0,
-    "use_deletes_api": true,
-    "use_tiebreaker": true
+    "atlas": {
+      "inclusive_bound": true,
+      "overlap_seconds": 120.0,
+      "use_deletes_api": true,
+      "use_tiebreaker": true
+    },
+    "beacon": {
+      "inclusive_bound": true,
+      "overlap_seconds": 120.0,
+      "scan_archived": true,
+      "use_tiebreaker": true
+    }
   },
   "prediction": {
     "as_complete_as_poll_alone": true,
@@ -31,6 +39,9 @@
           "reordered": 48,
           "subscription_active_at_end": true
         },
+        "deletions_credited_as_detected": 103,
+        "deletions_happened": 104,
+        "deletions_reflected_at_end": 103,
         "detected": 1121,
         "detected_by_poll_first": 1121,
         "detected_by_webhook_first": 0,
@@ -52,7 +63,6 @@
           "upstream_live": 3896,
           "wrong": 58
         },
-        "stale_overwrites_prevented": 0,
         "use_poll": true,
         "use_webhooks": false
       },
@@ -68,6 +78,9 @@
           "reordered": 48,
           "subscription_active_at_end": true
         },
+        "deletions_credited_as_detected": 97,
+        "deletions_happened": 104,
+        "deletions_reflected_at_end": 97,
         "detected": 1144,
         "detected_by_poll_first": 0,
         "detected_by_webhook_first": 1144,
@@ -82,14 +95,13 @@
         "score": {
           "accuracy": 0.98922,
           "correct": 3854,
-          "ghost_records": 104,
-          "local_live": 4000,
+          "ghost_records": 7,
+          "local_live": 3903,
           "missing": 0,
           "stale": 42,
           "upstream_live": 3896,
-          "wrong": 146
+          "wrong": 49
         },
-        "stale_overwrites_prevented": 0,
         "use_poll": false,
         "use_webhooks": true
       },
@@ -105,6 +117,9 @@
           "reordered": 48,
           "subscription_active_at_end": true
         },
+        "deletions_credited_as_detected": 103,
+        "deletions_happened": 104,
+        "deletions_reflected_at_end": 103,
         "detected": 1184,
         "detected_by_poll_first": 58,
         "detected_by_webhook_first": 1126,
@@ -126,7 +141,6 @@
           "upstream_live": 3896,
           "wrong": 4
         },
-        "stale_overwrites_prevented": 0,
         "use_poll": true,
         "use_webhooks": true
       },
@@ -142,6 +156,9 @@
           "reordered": 16,
           "subscription_active_at_end": false
         },
+        "deletions_credited_as_detected": 103,
+        "deletions_happened": 104,
+        "deletions_reflected_at_end": 103,
         "detected": 1137,
         "detected_by_poll_first": 871,
         "detected_by_webhook_first": 266,
@@ -163,7 +180,6 @@
           "upstream_live": 3896,
           "wrong": 46
         },
-        "stale_overwrites_prevented": 0,
         "use_poll": true,
         "use_webhooks": true
       }
@@ -181,28 +197,30 @@
           "reordered": 61,
           "subscription_active_at_end": true
         },
-        "detected": 1020,
-        "detected_by_poll_first": 1020,
+        "deletions_credited_as_detected": 121,
+        "deletions_happened": 124,
+        "deletions_reflected_at_end": 121,
+        "detected": 1136,
+        "detected_by_poll_first": 1136,
         "detected_by_webhook_first": 0,
-        "detection_latency_max_seconds": 15714.2,
-        "detection_latency_p50_seconds": 155.6,
-        "detection_latency_p95_seconds": 290.0,
+        "detection_latency_max_seconds": 15714.0,
+        "detection_latency_p50_seconds": 152.5,
+        "detection_latency_p95_seconds": 287.8,
         "duplicates_absorbed": 0,
         "label": "poll_only",
-        "miss_rate": 0.143577,
-        "missed": 171,
+        "miss_rate": 0.04618,
+        "missed": 55,
         "outage": false,
         "score": {
           "accuracy": 0.987616,
           "correct": 3828,
-          "ghost_records": 124,
-          "local_live": 4000,
+          "ghost_records": 3,
+          "local_live": 3879,
           "missing": 0,
           "stale": 48,
           "upstream_live": 3876,
-          "wrong": 172
+          "wrong": 51
         },
-        "stale_overwrites_prevented": 0,
         "use_poll": true,
         "use_webhooks": false
       },
@@ -218,6 +236,9 @@
           "reordered": 61,
           "subscription_active_at_end": true
         },
+        "deletions_credited_as_detected": 121,
+        "deletions_happened": 124,
+        "deletions_reflected_at_end": 121,
         "detected": 1145,
         "detected_by_poll_first": 0,
         "detected_by_webhook_first": 1145,
@@ -232,14 +253,13 @@
         "score": {
           "accuracy": 0.98581,
           "correct": 3821,
-          "ghost_records": 124,
-          "local_live": 4000,
+          "ghost_records": 3,
+          "local_live": 3879,
           "missing": 0,
           "stale": 55,
           "upstream_live": 3876,
-          "wrong": 179
+          "wrong": 58
         },
-        "stale_overwrites_prevented": 0,
         "use_poll": false,
         "use_webhooks": true
       },
@@ -255,28 +275,30 @@
           "reordered": 61,
           "subscription_active_at_end": true
         },
-        "detected": 1188,
-        "detected_by_poll_first": 72,
-        "detected_by_webhook_first": 1116,
-        "detection_latency_max_seconds": 295.5,
+        "deletions_credited_as_detected": 124,
+        "deletions_happened": 124,
+        "deletions_reflected_at_end": 124,
+        "detected": 1191,
+        "detected_by_poll_first": 82,
+        "detected_by_webhook_first": 1109,
+        "detection_latency_max_seconds": 295.3,
         "detection_latency_p50_seconds": 6.3,
-        "detection_latency_p95_seconds": 36.3,
+        "detection_latency_p95_seconds": 36.7,
         "duplicates_absorbed": 65,
         "label": "webhook_plus_poll",
-        "miss_rate": 0.002519,
-        "missed": 3,
+        "miss_rate": 0.0,
+        "missed": 0,
         "outage": false,
         "score": {
           "accuracy": 0.999742,
           "correct": 3875,
-          "ghost_records": 124,
-          "local_live": 4000,
+          "ghost_records": 0,
+          "local_live": 3876,
           "missing": 0,
           "stale": 1,
           "upstream_live": 3876,
-          "wrong": 125
+          "wrong": 1
         },
-        "stale_overwrites_prevented": 0,
         "use_poll": true,
         "use_webhooks": true
       },
@@ -292,28 +314,30 @@
           "reordered": 11,
           "subscription_active_at_end": false
         },
-        "detected": 1065,
-        "detected_by_poll_first": 796,
-        "detected_by_webhook_first": 269,
-        "detection_latency_max_seconds": 7918.8,
-        "detection_latency_p50_seconds": 97.1,
-        "detection_latency_p95_seconds": 283.6,
+        "deletions_credited_as_detected": 121,
+        "deletions_happened": 124,
+        "deletions_reflected_at_end": 121,
+        "detected": 1147,
+        "detected_by_poll_first": 879,
+        "detected_by_webhook_first": 268,
+        "detection_latency_max_seconds": 7918.7,
+        "detection_latency_p50_seconds": 103.3,
+        "detection_latency_p95_seconds": 282.4,
         "duplicates_absorbed": 12,
         "label": "webhook_plus_poll_outage",
-        "miss_rate": 0.105793,
-        "missed": 126,
+        "miss_rate": 0.036944,
+        "missed": 44,
         "outage": true,
         "score": {
           "accuracy": 0.989938,
           "correct": 3837,
-          "ghost_records": 124,
-          "local_live": 4000,
+          "ghost_records": 3,
+          "local_live": 3879,
           "missing": 0,
           "stale": 39,
           "upstream_live": 3876,
-          "wrong": 163
+          "wrong": 42
         },
-        "stale_overwrites_prevented": 0,
         "use_poll": true,
         "use_webhooks": true
       }

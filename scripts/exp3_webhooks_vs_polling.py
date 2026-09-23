@@ -6,7 +6,7 @@ Experiment 2 established that a modified-since watermark loses records. The
 next thing every team reaches for is webhooks. This measures whether that
 helps, what it costs, and what it does NOT fix.
 
-FOUR CONFIGURATIONS over the same mutation timeline:
+Four configurations over the same mutation timeline:
     poll_only            the experiment 2 baseline, correctly configured
     webhook_only         events are the only trigger
     webhook_plus_poll    the pattern the reference material recommends
@@ -17,6 +17,15 @@ FOUR CONFIGURATIONS over the same mutation timeline:
 The event is a hint, not data. Each delivery causes a re-read of the named
 record. Trusting the payload would layer an ordering bug on a delivery bug,
 and a re-read is one call.
+
+Why there is no "stale overwrites prevented" counter. Re-reading on a hint
+makes an out-of-order delivery HARMLESS BY CONSTRUCTION: the read returns the
+vendor's current version whatever order the events arrived in, so a counter of
+overwrites-the-version-check-rejected can only ever report zero. A metric that
+cannot be non-zero is not evidence that the hazard was handled; it is evidence
+of nothing. The reordering is real and is counted where it actually happens, as
+`channel.reordered`, and the version check that WOULD matter to a
+payload-trusting handler is pinned by the Store unit test instead.
 
 The metric worth publishing is the webhook-to-poll delta: how many changes the
 poll found that the webhooks should have delivered. It is the only number that
@@ -51,14 +60,15 @@ INTERVAL_SECONDS = 300
 OUTAGE_FROM = 7200.0
 OUTAGE_UNTIL = 10800.0
 
-# The correctly configured poll, carried over from experiment 2.
-GOOD_POLL = dict(use_tiebreaker=True, inclusive_bound=True,
-                 overlap_seconds=120.0, use_deletes_api=True)
+# The correctly configured poll, carried over from experiment 2. It is asked
+# for PER VENDOR, because the delete mechanism is not the same on both and a
+# shared literal was silently handing Beacon a poll that detected none of its
+# deletions. See lab.good_poll_config.
 
 
 def run(vendor_name, use_webhooks, use_poll, outage=False):
     clock, vendor, lim, conn = lab.build_run(
-        vendor_name, config=SyncConfig(**GOOD_POLL))
+        vendor_name, config=SyncConfig(**lab.good_poll_config(vendor_name)))
     conn.backfill()
 
     channel = WebhookChannel(vendor)
@@ -70,9 +80,28 @@ def run(vendor_name, use_webhooks, use_poll, outage=False):
     # Detection bookkeeping: for each mutation, the earliest simulated moment
     # the connector held the correct value for it.
     detected_at = {}
+    by_seq = {m["seq"]: m for m in vendor.timeline}
+
+    def reflects(m):
+        """Does the local store now hold the truth for this mutation?
+
+        ONE definition, asked by the webhook branch and the poll branch alike.
+        "Detected" means the connector's own copy is right about the record,
+        not that something told it to look. A delivery that arrives and is
+        processed but leaves the store wrong has not detected anything, and
+        crediting it there was how the webhook arms reported near-complete
+        detection while holding a wrong local copy of every deleted record.
+        """
+        rid = m["record_id"]
+        if m["kind"] in ("DELETE", "MERGE"):
+            return rid in conn.store.deleted
+        truth = vendor.records.get(rid)
+        local = conn.store.records.get(rid)
+        return (truth is not None and local is not None
+                and local.get("version") == truth.get("version"))
+
     seen_event_ids = set()
     duplicates_absorbed = 0
-    stale_overwrites_prevented = 0
     webhook_detections = 0
     poll_detections = 0
 
@@ -107,13 +136,16 @@ def run(vendor_name, use_webhooks, use_poll, outage=False):
             seen_event_ids.add(event["event_id"])
             rows = conn._call(vendor.get_many, [event["record_id"]])
             for r in rows:
-                prior = conn.store.records.get(r["id"])
-                if prior is not None and prior.get("version", 0) > r.get("version", 0):
-                    stale_overwrites_prevented += 1
                 conn.store.upsert(r, source_version=r.get("version"))
             if not rows:
+                # The by-id read answered NOT FOUND, which on both vendor
+                # shapes is what a deleted or archived record looks like from
+                # the ordinary read path. Absence IS the signal, and this is
+                # the only way the webhook path ever learns about a deletion.
                 conn.store.mark_deleted(event["record_id"])
-            if event["seq"] not in detected_at:
+            m = by_seq.get(event["seq"])
+            if event["seq"] not in detected_at and m is not None \
+                    and reflects(m):
                 detected_at[event["seq"]] = clock.now()
                 webhook_detections += 1
             continue
@@ -124,15 +156,7 @@ def run(vendor_name, use_webhooks, use_poll, outage=False):
         for m in vendor.timeline:
             if m["at"] > clock.now() or m["seq"] in detected_at:
                 continue
-            rid = m["record_id"]
-            truth = vendor.records.get(rid)
-            local = conn.store.records.get(rid)
-            if m["kind"] in ("DELETE", "MERGE"):
-                if rid in conn.store.deleted:
-                    detected_at[m["seq"]] = clock.now()
-                    poll_detections += 1
-            elif truth is not None and local is not None \
-                    and local.get("version") == truth.get("version"):
+            if reflects(m):
                 detected_at[m["seq"]] = clock.now()
                 poll_detections += 1
         next_poll = clock.now() + INTERVAL_SECONDS
@@ -144,6 +168,17 @@ def run(vendor_name, use_webhooks, use_poll, outage=False):
     latencies = sorted(detected_at[m["seq"]] - m["at"]
                        for m in happened if m["seq"] in detected_at)
     missed = [m for m in happened if m["seq"] not in detected_at]
+
+    # Deletions get their own accounting, because they are the class of change
+    # a webhook path is most able to claim and least able to prove. "Credited"
+    # is how many the arm counted as detected; "reflected at end" is how many
+    # its own local copy actually knows are gone. An arm where those two
+    # disagree is reporting a detection rate its store does not support, and
+    # publishing both is what makes that visible instead of arguable.
+    deletions = [m for m in happened if m["kind"] in ("DELETE", "MERGE")]
+    deletions_credited = sum(1 for m in deletions if m["seq"] in detected_at)
+    deletions_reflected = sum(1 for m in deletions
+                              if m["record_id"] in conn.store.deleted)
 
     def pct(vals, p):
         if not vals:
@@ -166,7 +201,9 @@ def run(vendor_name, use_webhooks, use_poll, outage=False):
         "detected_by_webhook_first": webhook_detections,
         "detected_by_poll_first": poll_detections,
         "duplicates_absorbed": duplicates_absorbed,
-        "stale_overwrites_prevented": stale_overwrites_prevented,
+        "deletions_happened": len(deletions),
+        "deletions_credited_as_detected": deletions_credited,
+        "deletions_reflected_at_end": deletions_reflected,
         "calls": vendor.calls,
         "channel": channel.stats(),
         "score": score(conn.store, vendor),
@@ -176,7 +213,8 @@ def run(vendor_name, use_webhooks, use_poll, outage=False):
 def main():
     out = {"interval_seconds": INTERVAL_SECONDS,
            "outage_from": OUTAGE_FROM, "outage_until": OUTAGE_UNTIL,
-           "poll_config": GOOD_POLL, "vendors": {}}
+           "poll_config": {v: lab.good_poll_config(v)
+                           for v in ("atlas", "beacon")}, "vendors": {}}
 
     for vendor_name in ("atlas", "beacon"):
         print("=== %s ===" % vendor_name)

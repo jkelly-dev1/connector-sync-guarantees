@@ -30,6 +30,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import charts
 import lab
+from sim import world as W
 
 README = os.path.join(lab.REPO, "README.md")
 
@@ -155,6 +156,21 @@ def build():
     add("e2 ghost headline", "ghost records: %s to %s"
         % (n(la["+overlap_300s"]["score"]["ghost_records"]),
            n(la["+deletes_api"]["score"]["ghost_records"])))
+    # The paragraph that explains why the accuracy column does not move when
+    # the ghosts do. Every figure in it is derived, so a re-run that moves one
+    # fails here instead of leaving a stale sentence.
+    ghosts_before = la["+overlap_300s"]["score"]["ghost_records"]
+    ghosts_after = la["+deletes_api"]["score"]["ghost_records"]
+    add("e2 ghosts removed", "removes %s of %s ghosts"
+        % (n(ghosts_before - ghosts_after), n(ghosts_before)))
+    add("e2 accuracy unmoved", "moves Accuracy by %s"
+        % f(abs(la["+deletes_api"]["score"]["accuracy"]
+                - la["+overlap_300s"]["score"]["accuracy"]), 4))
+    naive_score = la["naive"]["score"]
+    add("e2 naive accuracy over everything held",
+        "naive\nAtlas is %s rather than %s"
+        % (f(naive_score["correct"] / naive_score["local_live"], 4),
+           f(naive_score["accuracy"], 4)))
 
     # ---- experiment 3 ------------------------------------------------------
     arm_label = {"poll_only": "poll only", "webhook_only": "webhook only",
@@ -215,16 +231,39 @@ def build():
     add("e4 count rate", "is refuted at %s" % f(rows["count_check"]["detection_rate"], 4))
     add("e4 wrong count", "that is %s of the %s problems"
         % (n(present["wrong"]), n(rows["full_field_compare"]["total_present"])))
-    # Re-keyed 2026-08-29: the expected literal carried the bold markers the
-    # sentence in README.md used to wrap in, and the markers are gone from the
-    # prose, so the literal quotes what ships.
     add("e4 cost multiple", "%s calls, five times the\ncheapest useful check"
         % n(rows["full_field_compare"]["calls"]))
     add("e4 checksum cost", "%s calls and is strictly worse than simply listing every id"
         % n(rows["partitioned_checksum"]["calls"]))
+    # The count check's own two numbers, which the strategy measures and which
+    # the paragraph quotes.
+    count_signal = rows["count_check"]["signal"]
+    add("e4 count check both counts", "%s local against %s upstream"
+        % (n(count_signal["local_count"]), n(count_signal["remote_count"])))
+    add("e4 count check names nothing", "the strategy scores %s anyway"
+        % f(rows["count_check"]["detection_rate"], 4))
+
+    # ---- experiment 3, the beacon contrast ---------------------------------
+    b_arms = {r["label"]: r for r in e3["vendors"]["beacon"]}
+    add("e3 beacon poll only", "Beacon's poll alone misses %s of %s"
+        % (n(b_arms["poll_only"]["missed"]), n(b_arms["poll_only"]["changes"])))
+    add("e3 beacon both", "misses %s and holds %s ghost records"
+        % (n(b_arms["webhook_plus_poll"]["missed"]),
+           n(b_arms["webhook_plus_poll"]["score"]["ghost_records"])))
+    add("e3 beacon deletions", "%s of %s deletions"
+        % (n(b_arms["webhook_plus_poll"]["deletions_reflected_at_end"]),
+           n(b_arms["webhook_plus_poll"]["deletions_happened"])))
 
     # ---- the world ---------------------------------------------------------
-    add("world size", "%s records per vendor" % n(4000))
+    # From the experiment that already publishes it, not from a literal, so a
+    # change to W.N_RECORDS moves this sentence too.
+    add("world size", "%s records per vendor"
+        % n(e4["prediction"]["corpus_records"]))
+    # The skew is a constant in the generator rather than a measured output, so
+    # it is derived from the generator. A figure with no owner is a figure that
+    # drifts, whichever file it lives in.
+    add("world clock skew", "a clock %ds behind"
+        % abs(int(W.VENDOR_CLOCK_SKEW)))
 
     return want
 

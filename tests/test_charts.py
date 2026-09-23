@@ -128,6 +128,39 @@ def test_the_access_pattern_chart_keeps_the_small_bars_visible():
         assert "#" in line, line
 
 
+def test_a_ladder_rung_with_no_chart_label_is_an_error_not_an_omission():
+    # (mutation-checked: restore the `continue` and this passes while the
+    # chart quietly drops a whole mitigation)
+    #
+    # The ghost chart is the argument of this repository (five flat bars and
+    # a cliff), so a rung silently missing from it is a missing step in the
+    # argument, drawn identically to a complete one.
+    real = charts.lab.read_result
+
+    def with_an_extra_rung(name):
+        data = real(name)
+        if name == "exp2_incremental_loss":
+            ladder = data["vendors"]["atlas"]["ladder"]
+            ladder.append({"label": "+something_new",
+                           "score": dict(ladder[-1]["score"])})
+        return data
+
+    # charts.py does `import lab` and calls `lab.read_result`, so THAT is the
+    # binding it resolves; patching the function in its defining module would
+    # change nothing this code path reaches.
+    assert len(bars(charts.chart_e2_ghost_records())) == 6   # before
+    charts.lab.read_result = with_an_extra_rung
+    try:
+        with pytest.raises(KeyError) as exc:
+            charts.chart_e2_ghost_records()
+        assert "+something_new" in str(exc.value)
+    finally:
+        charts.lab.read_result = real
+    # With the patch removed it renders again, so the failure above came
+    # from the extra rung and not from a chart that can no longer be drawn.
+    assert len(bars(charts.chart_e2_ghost_records())) == 6
+
+
 def test_the_count_check_bar_is_the_only_empty_one_in_its_chart():
     lines = bars(charts.chart_e4_detection_rate())
     empty = [line for line in lines if "#" not in line]

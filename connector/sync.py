@@ -109,6 +109,7 @@ class Connector:
         self.config = config or SyncConfig()
         self.watermark = None
         self.passes = 0
+        self.backfill_complete = None    # None = no backfill has been run
         self.quota_exhausted = False
         self.throttle_events = 0
 
@@ -147,16 +148,26 @@ class Connector:
         it had already paged past. Setting it to the start and relying on an
         idempotent upsert to absorb the overlap is the whole fix, and it costs
         one re-read.
+
+        A backfill that did not finish sets no watermark at all. The pages
+        it never reached hold records whose last_modified is BELOW t0, so a
+        caller that carries on incrementally from t0 will never ask for them
+        again: they are invisible rather than late, and nothing downstream
+        reports a gap. Leaving the watermark unset makes the next pass a full
+        scan, which is the only safe thing an interrupted backfill can hand its
+        successor. The caller is told either way, in `complete`.
         """
         t0 = self.clock.now()
         cursor = None
         pages = 0
+        complete = True
         while pages < max_pages:
             try:
                 page = self._call(self.vendor.query_modified_since,
                                   since=-1e18, limit=self.config.page_size,
                                   last_id=cursor)
             except QuotaExhausted:
+                complete = False
                 break
             if not page:
                 break
@@ -165,8 +176,15 @@ class Connector:
             last = page[-1]
             cursor = (last["last_modified"], last["id"])
             pages += 1
-        self.watermark = t0
-        return {"pages": pages, "watermark": t0}
+        else:
+            # Ran out of the page budget rather than out of records: there may
+            # be more upstream, so this is not a finished backfill either.
+            complete = False
+        self.backfill_complete = complete
+        if complete:
+            self.watermark = t0
+        return {"pages": pages, "watermark": self.watermark,
+                "complete": complete}
 
     # ---- incremental ------------------------------------------------------
 
@@ -179,16 +197,25 @@ class Connector:
         """
         self.passes += 1
         cfg = self.config
-        since = (self.watermark or 0.0) - cfg.overlap_seconds
-        if not cfg.inclusive_bound:
-            # Strict greater-than, the naive default. Records sharing the exact
-            # boundary timestamp are skipped. With a coarse clock or a bulk
-            # write that stamps many rows identically, that is not a rare edge
-            # case.
-            since = since + 1e-9
+        if self.watermark is None:
+            # No watermark is not a watermark of zero. Nothing has been
+            # established as seen, so the only correct lower bound is
+            # everything, which is what an interrupted backfill hands its
+            # successor and why it refuses to leave one behind. Reading an
+            # unset watermark as 0.0 would put every record stamped before the
+            # run began permanently below the bound.
+            since = -1e18
+        else:
+            since = self.watermark - cfg.overlap_seconds
+            if not cfg.inclusive_bound:
+                # Strict greater-than, the naive default. Records sharing the
+                # exact boundary timestamp are skipped. With a coarse clock or
+                # a bulk write that stamps many rows identically, that is not a
+                # rare edge case.
+                since = since + 1e-9
 
         observed = 0
-        highest = self.watermark or 0.0
+        highest = self.watermark
         cursor = None
         while True:
             try:
@@ -205,7 +232,7 @@ class Connector:
                 else:
                     self.store.upsert(rec, source_version=rec.get("version"))
                 observed += 1
-                if rec["last_modified"] > highest:
+                if highest is None or rec["last_modified"] > highest:
                     highest = rec["last_modified"]
             if not cfg.use_tiebreaker:
                 # Without a tiebreaker there is no safe cursor. The only thing
@@ -221,9 +248,11 @@ class Connector:
 
         if cfg.use_deletes_api:
             try:
-                gone = self._call(self.vendor.get_deleted,
-                                  since=(self.watermark or 0.0) - cfg.overlap_seconds,
-                                  until=self.clock.now())
+                gone = self._call(
+                    self.vendor.get_deleted,
+                    since=(-1e18 if self.watermark is None
+                           else self.watermark - cfg.overlap_seconds),
+                    until=self.clock.now())
                 for rid in gone:
                     self.store.mark_deleted(rid)
             except (QuotaExhausted, NotImplementedError):
@@ -231,8 +260,9 @@ class Connector:
 
         # Advance to what was observed, not to "now". Advancing to the current
         # time asserts that everything up to now was seen, which is precisely
-        # the assumption that fails.
-        self.watermark = max(self.watermark or 0.0, highest)
+        # the assumption that fails. A pass that observed nothing establishes
+        # nothing, so it leaves the watermark exactly where it found it.
+        self.watermark = highest
         return observed
 
     def run(self, until, interval_seconds):

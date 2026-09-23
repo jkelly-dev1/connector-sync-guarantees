@@ -64,6 +64,43 @@ def test_the_bulk_path_trades_calls_for_latency(exp1):
         ap["paged_scan"]["simulated_seconds"]
 
 
+def test_every_access_pattern_can_report_that_it_did_not_finish(exp1):
+    # The SHIPPED half of the property. Both cap_bound scenarios in the
+    # published results are ones where the paged scan genuinely finishes, so
+    # this cannot distinguish an honest row from a structurally unfalsifiable
+    # one on its own; the test below it does that, by running the experiment
+    # against an allowance the paged scan cannot survive.
+    cap = exp1["access_patterns"]["cap_bound"]
+    assert cap, "the cap-bound access patterns must have run"
+    by_pattern = {r["pattern"]: r for r in cap}
+    assert by_pattern["paged_scan_plus_detail_fetch"]["completed"] is False
+    # The cheap pattern under the same cap does finish, so "completed" is
+    # not being satisfied by reporting no everywhere.
+    assert by_pattern["paged_scan"]["completed"] is True
+
+
+def test_a_paged_scan_that_ran_out_of_quota_reports_that_it_did_not_finish():
+    # (mutation-checked: drop `and not conn.quota_exhausted` from the
+    # paged_scan arm and it reports completed=True holding 2,000 of 4,000
+    # records)
+    #
+    # Why this runs the experiment instead of reading its results:
+    # Connector.backfill swallows QuotaExhausted (it breaks out of the page
+    # loop and returns), so an arm that decides "completed" from whether
+    # backfill() raised can only ever answer yes. In BOTH published scenarios
+    # the paged scan really does finish (21 calls against an allowance of 100),
+    # so the shipped results are identical either way and no assertion over
+    # them can see the difference. The allowance below is one the paged scan
+    # cannot survive, which is the only place the two answers part company.
+    import exp1_rate_limits
+
+    rows = exp1_rate_limits.access_patterns(
+        {"daily_allowance": 10, "per_second_limit": 5.0, "page_size": 200})
+    scan = {r["pattern"]: r for r in rows}["paged_scan"]
+    assert scan["completed"] is False
+    assert 0 < scan["records"] < 4000
+
+
 def test_the_n_plus_one_pattern_cannot_fit_under_the_cap(exp1):
     ap = {r["pattern"]: r for r in exp1["access_patterns"]["cap_bound"]}
     assert ap["paged_scan"]["completed"] is True
@@ -204,6 +241,64 @@ def test_duplicate_deliveries_are_absorbed_rather_than_double_processed(exp3):
         assert arms["webhook_plus_poll"]["duplicates_absorbed"] > 0
 
 
+def test_no_arm_credits_a_deletion_its_own_store_does_not_reflect(exp3):
+    # (mutation-checked with both halves together: Vendor.get_many handing the
+    # tombstone back and the webhook branch crediting a delivery on arrival
+    # instead of on reflection. Atlas webhook_only then reports 97 credited
+    # against 0 reflected. Neither half alone moves this world's numbers, so
+    # the reflection guard is defense in depth here rather than the
+    # load-bearing half.)
+    #
+    # The asymmetry this forbids. A poll credits a deletion only when the
+    # local copy agrees the record is gone. A webhook arm could credit one
+    # simply because a delivery arrived and was processed, which would report
+    # a detection rate the store does not support.
+    #
+    # Detection means the connector's own copy is right, not that something
+    # told it to look. Nothing downstream of that distinction can be trusted
+    # if the two numbers disagree.
+    for vendor, rows in exp3["vendors"].items():
+        for r in rows:
+            assert r["deletions_happened"] > 0, (vendor, r["label"])
+            assert (r["deletions_credited_as_detected"]
+                    == r["deletions_reflected_at_end"]), (vendor, r["label"])
+
+
+def test_a_webhook_only_arm_learns_its_deletions_from_a_not_found(exp3):
+    # (mutation-checked: let Vendor.get_many return the tombstone and both
+    # webhook_only arms drop to 0 reflected and 104 / 124 ghosts)
+    #
+    # A webhook-only arm never polls, so it never reaches the deletes endpoint
+    # and never scans for the archived flag. The ONLY way it can learn that a
+    # record is gone is the re-read coming back empty. If that arm reflects no
+    # deletions at all, absence is not being read as a signal, and every
+    # deleted record is a ghost in its local copy however good its latency
+    # figures look.
+    for vendor, rows in exp3["vendors"].items():
+        arm = {r["label"]: r for r in rows}["webhook_only"]
+        assert arm["deletions_reflected_at_end"] > 0, vendor
+        assert arm["score"]["ghost_records"] < arm["deletions_happened"], vendor
+
+
+@pytest.mark.parametrize("name", ["exp3", "exp4"])
+def test_each_vendor_is_polled_with_its_own_delete_mechanism(name, request):
+    # (mutation-checked: hand both vendors one shared poll_config with
+    # use_deletes_api=True and beacon's entry fails)
+    #
+    # Atlas hard-deletes and has a dedicated deletes endpoint. Beacon archives
+    # and has NO such endpoint: get_deleted raises NotImplementedError, the
+    # connector swallows it, and the arm then detects none of its deletions
+    # while still being described as correctly configured. Experiment 2 makes
+    # this substitution at its last ladder rung; the experiments downstream of
+    # it have to make the same one.
+    cfg = request.getfixturevalue(name)["poll_config"]
+    assert set(cfg) == {"atlas", "beacon"}
+    assert cfg["atlas"]["use_deletes_api"] is True
+    assert cfg["atlas"].get("scan_archived", False) is False
+    assert cfg["beacon"]["scan_archived"] is True
+    assert cfg["beacon"].get("use_deletes_api", False) is False
+
+
 # ---------------------------------------------------------------------------
 # EXPERIMENT 4: RECONCILIATION
 # ---------------------------------------------------------------------------
@@ -215,6 +310,27 @@ def test_a_count_check_catches_essentially_nothing(exp4):
     rows = {r["strategy"]: r for r in exp4["vendors"]["atlas"]}
     assert rows["count_check"]["detection_rate"] == 0.0
     assert rows["count_check"]["calls"] <= 2
+
+
+def test_a_count_check_signals_a_discrepancy_and_still_names_no_record(exp4):
+    # (mutation-checked: make the count check add the drift it cannot see to
+    # `found`, and this fails on total_detected; make local and remote counts
+    # equal, and it fails on discrepancy_signalled)
+    #
+    # The zero is the finding, and it has to be a measurement: a detection
+    # rate of 0.0000 from a line that cannot produce anything else could not
+    # fail on a broken or deleted strategy either. What distinguishes "detects
+    # nothing" from "did not run" is that the check fired: the counts really are unequal here, by
+    # exactly the one ghost the best incremental configuration leaves behind.
+    for vendor, rows in exp4["vendors"].items():
+        r = {x["strategy"]: x for x in rows}["count_check"]
+        signal = r["signal"]
+        assert signal["discrepancy_signalled"] is True, vendor
+        assert signal["remote_count"] != signal["local_count"], vendor
+        assert r["calls"] == 1, vendor
+        # It fired, it cost a call, and it named nothing.
+        assert r["total_detected"] == 0, vendor
+        assert r["total_present"] > 0, vendor
 
 
 def test_only_a_field_comparison_sees_a_silently_wrong_value(exp4):

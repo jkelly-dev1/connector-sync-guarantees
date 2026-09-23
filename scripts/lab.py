@@ -35,6 +35,33 @@ def build_run(vendor_name, strategy="token_bucket", share=0.5, config=None):
     return clock, vendor, lim, conn
 
 
+# The incremental configuration experiment 2 ends on, PER VENDOR.
+#
+# There is one dictionary here and not a literal in each experiment because the
+# right configuration is NOT THE SAME ON BOTH VENDORS and a single shared
+# literal quietly asserts that it is. Atlas hard-deletes and needs the
+# dedicated deletes endpoint; Beacon archives, has no such endpoint at all, and
+# needs the archived flag scanned instead. Handing Beacon `use_deletes_api`
+# does harm: get_deleted raises NotImplementedError, the connector
+# swallows it, and the arm detects NONE of its deletions while still being
+# described as correctly configured.
+_GOOD_POLL_COMMON = dict(use_tiebreaker=True, inclusive_bound=True,
+                         overlap_seconds=120.0)
+_DELETE_MECHANISM = {"atlas": {"use_deletes_api": True},
+                     "beacon": {"scan_archived": True}}
+
+
+def good_poll_config(vendor_name):
+    """The correctly configured poll for one vendor, as a plain dict.
+
+    Experiment 2 substitutes scan_archived for use_deletes_api when it reaches
+    Beacon's last ladder rung; this is that substitution, made once, so an
+    experiment downstream of it cannot forget."""
+    cfg = dict(_GOOD_POLL_COMMON)
+    cfg.update(_DELETE_MECHANISM[vendor_name])
+    return cfg
+
+
 def write_result(name, payload):
     """results/<name>.json, sorted, with the input manifest stamped in.
 

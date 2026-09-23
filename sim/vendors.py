@@ -181,8 +181,21 @@ class Vendor:
 
     # ---- the read API -----------------------------------------------------
 
+    def _tombstoned(self, rec):
+        """Whether this row is a tombstone: deleted, or archived, upstream.
+
+        Each vendor shape spells the tombstone differently (Atlas sets a
+        `deleted` flag, Beacon an `archived` one), and every read path that
+        must not hand a tombstone back asks this predicate instead of testing
+        the flag itself. Having one predicate is what stops a new endpoint from
+        accidentally being the one that leaks them.
+        """
+        raise NotImplementedError(
+            "%s does not say what a tombstone looks like; every read path "
+            "depends on it" % type(self).__name__)
+
     def _live(self):
-        raise NotImplementedError
+        return [r for r in self.records.values() if not self._tombstoned(r)]
 
     def _scannable(self):
         """The records the modified-since scan can see.
@@ -234,12 +247,26 @@ class Vendor:
         return page
 
     def get_many(self, ids):
-        """Fetch records by id, in batches the vendor permits."""
+        """Fetch records by id, in batches the vendor permits.
+
+        A TOMBSTONE IS NOT RETURNED. Asking a real system of either shape for a
+        record it has deleted or archived does not hand back the row with a
+        flag on it: the ordinary by-id read answers NOT FOUND, and the deleted
+        row is reachable only by explicitly asking for deleted or archived
+        rows, which is what get_deleted() and _scannable() model here.
+
+        That absence is the only signal a by-id reader gets, and a caller that
+        treats "the record I asked for is not in the response" as a deletion is
+        reading the API correctly. A fake that returned the tombstone instead
+        would let a connector re-upsert a deleted record as live and still look
+        correct in this simulation, which is the bug this models away.
+        """
         if len(ids) > self.batch_max:
             raise ValueError("batch of %d exceeds vendor max %d"
                              % (len(ids), self.batch_max))
         self._check_limits("get_many")
-        out = [dict(self.records[i]) for i in ids if i in self.records]
+        out = [dict(self.records[i]) for i in ids
+               if i in self.records and not self._tombstoned(self.records[i])]
         self.records_returned += len(out)
         return out
 
@@ -266,8 +293,8 @@ class Atlas(Vendor):
         rec["deleted"] = True
         self.deleted_log.append((rec["id"], at))
 
-    def _live(self):
-        return [r for r in self.records.values() if not r["deleted"]]
+    def _tombstoned(self, rec):
+        return bool(rec["deleted"])
 
     def get_deleted(self, since, until):
         """The dedicated deletes endpoint, with its retention window.
@@ -339,8 +366,8 @@ class Beacon(Vendor):
         rec["last_modified"] = at
         self.deleted_log.append((rec["id"], at))
 
-    def _live(self):
-        return [r for r in self.records.values() if not r["archived"]]
+    def _tombstoned(self, rec):
+        return bool(rec["archived"])
 
     def _scannable(self):
         # Archived rows remain readable. This one line is the whole difference

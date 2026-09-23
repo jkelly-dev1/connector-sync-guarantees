@@ -78,8 +78,8 @@ def test_marking_the_same_record_deleted_twice_counts_once():
 
 
 def test_an_upsert_after_a_delete_resurrects_the_record():
-    # A record can be deleted and re-created upstream. The local copy must be
-    # able to follow that rather than staying dead forever.
+    # A record can be deleted and re-created upstream, and the local copy must
+    # follow it back to life.
     s = Store()
     s.upsert(_rec(), source_version=1)
     s.mark_deleted("A-000001")
@@ -117,9 +117,9 @@ def test_every_knob_round_trips_through_as_dict():
 # Backfill and the watermark HANDOFF
 # ---------------------------------------------------------------------------
 
-def _conn(config=None, **vendor_kw):
+def _conn(config=None, timeline=None, **vendor_kw):
     clock = Clock()
-    vendor = Atlas(clock)
+    vendor = Atlas(clock, timeline=timeline)
     for k, v in vendor_kw.items():
         setattr(vendor, k, v)
     lim = limiters.build("token_bucket", clock, vendor.per_second_limit, 0.5)
@@ -148,15 +148,39 @@ def test_the_watermark_is_set_from_the_START_of_the_backfill():
 
 
 def test_an_incremental_pass_advances_the_watermark_only_to_what_it_saw():
-    # Advancing to "now" asserts that everything up to now was seen, which is
-    # exactly the assumption that fails.
+    # (mutation-checked: self.watermark = self.clock.now() at the end of
+    # incremental_pass, the bug the comment there warns about, fails this.
+    # A bare `watermark <= now` would not catch it: "advance to now"
+    # satisfies "<= now" perfectly.)
+    #
+    # The gap is what matters. One record changes at t=10 and then nothing
+    # happens for an hour. A pass at t=3610 has seen the world as of t=10 and
+    # nothing later, so its watermark is 10. A pass that sets the watermark to
+    # 3610 has asserted, without evidence, that it saw everything in between,
+    # and every record stamped in that hour by a path it cannot scan is now
+    # permanently below the bound.
+    #
+    # The timeline is EMPTY so the only change in the world is the one this
+    # test makes. Against the generated timeline the two answers differ by
+    # about a second, which is a difference a test can pass on by accident.
     clock, vendor, conn = _conn(SyncConfig(use_tiebreaker=True,
-                                           inclusive_bound=True))
+                                           inclusive_bound=True),
+                                timeline=[])
     conn.backfill()
-    clock.advance(600)
-    vendor.apply_timeline_to_now()
+    assert conn.watermark == pytest.approx(0.0)
+
+    clock.advance(10)
+    rid = sorted(vendor.records)[0]
+    vendor.records[rid]["version"] += 1
+    vendor.records[rid]["last_modified"] = clock.now()
+    changed_at = clock.now()
+
+    clock.advance(3600)
     conn.incremental_pass()
-    assert conn.watermark <= clock.now()
+
+    assert conn.store.records[rid]["version"] == vendor.records[rid]["version"]
+    assert conn.watermark == pytest.approx(changed_at)
+    assert conn.watermark < clock.now() - 3600
 
 
 def test_a_quota_exhaustion_during_backfill_is_not_retried_forever():
@@ -165,6 +189,55 @@ def test_a_quota_exhaustion_during_backfill_is_not_retried_forever():
     conn.backfill()
     assert conn.quota_exhausted
     assert len(conn.store.records) < len(vendor.records)
+
+
+def test_an_interrupted_backfill_leaves_no_watermark_behind():
+    # (mutation-checked: set self.watermark = t0 unconditionally and this
+    # fails, and so does the test below it, which shows what the watermark
+    # would then cost)
+    #
+    # A backfill that stopped half way has not seen the records it never paged
+    # to. Handing its successor a watermark asserts that it has.
+    clock, vendor, conn = _conn(daily_allowance=5, per_second_limit=1000)
+    r = conn.backfill()
+    assert conn.quota_exhausted
+    assert r["complete"] is False
+    assert conn.backfill_complete is False
+    assert conn.watermark is None
+    assert r["watermark"] is None
+
+
+def test_the_records_an_interrupted_backfill_missed_are_still_reachable():
+    # What the line above prevents, run here. Every record in the generated
+    # world carries a last_modified before the run starts, which is what makes
+    # a first watermark meaningful, so a watermark of t0 would put every
+    # unfetched record permanently below the incremental bound: invisible
+    # rather than late, with no counter anywhere reporting a gap.
+    clock, vendor, conn = _conn(daily_allowance=5, per_second_limit=1000)
+    conn.backfill()
+    held = len(conn.store.records)
+    assert 0 < held < len(vendor.records)
+    assert max(r["last_modified"] for r in vendor.records.values()) < 0
+
+    # Tomorrow: the allowance is back and the caller carries on.
+    vendor.daily_allowance = 100000
+    vendor.quota_used = 0
+    conn.quota_exhausted = False
+    conn.config.use_tiebreaker = True
+    conn.incremental_pass()
+    assert len(conn.store.records) == len(vendor.records)
+
+
+def test_a_finished_backfill_still_says_so_and_still_sets_the_watermark():
+    # The other side, so that "complete" cannot be satisfied by always
+    # reporting False.
+    clock, vendor, conn = _conn()
+    started = clock.now()
+    r = conn.backfill()
+    assert r["complete"] is True
+    assert conn.backfill_complete is True
+    assert conn.watermark == pytest.approx(started)
+    assert r["watermark"] == pytest.approx(started)
 
 
 # ---------------------------------------------------------------------------

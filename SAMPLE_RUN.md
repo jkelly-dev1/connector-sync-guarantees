@@ -1,14 +1,18 @@
 # Sample run
 
-Captured 2026-08-23 on one Linux machine with Python 3.13.7. Every command
-below was executed exactly as written, in this order, from a clean checkout.
+Captured 2026-09-16 on one Linux machine with Python 3.13.7, superseding the
+2026-08-23 capture. Every command below was executed exactly as written, in
+this order, from a clean checkout.
 
-Nothing in this file was altered. The sibling repositories in this portfolio
-both needed a stated alteration here: they measure wall-clock latency, so their
-captures move between runs and their figure checkers go red until the README is
-re-synced. This one does not move. Every duration below is SIMULATED SECONDS
-from a clock the code advances explicitly, so the capture, the committed results
-and the README all agree and keep agreeing.
+No output below was altered, and `scripts/check_sample_run.py` checks
+that: it re-runs each command below and requires the same output, byte for
+byte, and CI runs it.
+
+Only the suite's last line is not compared verbatim. Its test count is
+checked; its duration is wall-clock, and that duration is the only wall-clock
+figure anywhere in this repository. Every other duration below is simulated
+seconds from a clock the code advances explicitly, so the capture, the
+committed results and the README agree on any machine.
 
 The last block is the proof rather than the claim: the whole experiment set is
 run a second time and diffed against the first, and the diff is empty.
@@ -40,7 +44,7 @@ $ python3 scripts/exp1_rate_limits.py
   paged_scan_plus_detail_fetch   INCOMPLETE calls    100  sim     39.5s
   bulk_export                    complete  calls      1  sim    900.0s
 
-under a per-second ceiling the strategies that COMPLETED spread by 1.94x (naive fastest, fixed_sleep slowest)
+under a per-second ceiling the PACED strategies spread by 1.38x; all four including naive spread by 1.94x (naive fastest, fixed_sleep slowest)
 under the daily cap, 0 of 4 strategies completed
 the N+1 access pattern costs 191x the calls of a paged scan
 prediction: QUALIFIED
@@ -95,10 +99,10 @@ $ python3 scripts/exp3_webhooks_vs_polling.py
   webhook_plus_poll          missed    4/1188 (0.0034)  p50    6.1s  max  2219.3s  calls  1357
   webhook_plus_poll_outage   missed   51/1188 (0.0429)  p50  111.6s  max 17802.6s  calls   485
 === beacon ===
-  poll_only                  missed  171/1191 (0.1436)  p50  155.6s  max 15714.2s  calls   137
+  poll_only                  missed   55/1191 (0.0462)  p50  152.5s  max 15714.0s  calls   137
   webhook_only               missed   46/1191 (0.0386)  p50    6.3s  max    40.0s  calls  1186
-  webhook_plus_poll          missed    3/1191 (0.0025)  p50    6.3s  max   295.5s  calls  1282
-  webhook_plus_poll_outage   missed  126/1191 (0.1058)  p50   97.1s  max  7918.8s  calls   411
+  webhook_plus_poll          missed    0/1191 (0.0000)  p50    6.3s  max   295.3s  calls  1282
+  webhook_plus_poll_outage   missed   44/1191 (0.0369)  p50  103.3s  max  7918.7s  calls   411
 
 poll alone   p50 154.1s, missed 67
 webhook+poll p50 6.1s, missed 4
@@ -118,11 +122,11 @@ $ python3 scripts/exp4_reconciliation.py
   full_field_compare     calls    20  detected   58/  58 (1.0000)  missing   0 ghost   1 wrong  57
 
 === beacon ===
-  none                   calls     0  detected    0/ 172 (0.0000)  missing   0 ghost   0 wrong   0
-  count_check            calls     1  detected    0/ 172 (0.0000)  missing   0 ghost   0 wrong   0
-  partitioned_checksum   calls    77  detected  124/ 172 (0.7209)  missing   0 ghost 124 wrong   0
-  full_id_inventory      calls     4  detected  124/ 172 (0.7209)  missing   0 ghost 124 wrong   0
-  full_field_compare     calls    39  detected  172/ 172 (1.0000)  missing   0 ghost 124 wrong  48
+  none                   calls     0  detected    0/  51 (0.0000)  missing   0 ghost   0 wrong   0
+  count_check            calls     1  detected    0/  51 (0.0000)  missing   0 ghost   0 wrong   0
+  partitioned_checksum   calls    43  detected    3/  51 (0.0588)  missing   0 ghost   3 wrong   0
+  full_id_inventory      calls     4  detected    3/  51 (0.0588)  missing   0 ghost   3 wrong   0
+  full_field_compare     calls    39  detected   51/  51 (1.0000)  missing   0 ghost   3 wrong  48
 
 count check detected 0 of 58 (0.0%) for 1 call(s)
 partitioned checksum detected 1 of 58 (1.7%) for 41 calls
@@ -139,12 +143,12 @@ prediction: REFUTED
 wrote results/exp4_reconciliation.json
 
 $ python -m pytest -q
-........................................................................ [ 76%]
-......................                                                   [100%]
-94 passed in 1.11s
+........................................................................ [ 63%]
+.........................................                                [100%]
+113 passed in 1.63s
 
 $ python3 scripts/check_readme_numbers.py
-64 figures and 4 charts re-derived from results/*.json and checked against README.md
+73 figures and 4 charts re-derived from results/*.json and checked against README.md
 all present
 
 $ the reproducibility claim, checked

@@ -111,7 +111,12 @@ def access_patterns(overrides):
         ok = True
     except QuotaExhausted:
         ok = False
-    out.append({"pattern": "paged_scan", "completed": ok,
+    # Connector.backfill swallows QuotaExhausted (it breaks out of the page
+    # loop and returns), so `except` alone can never be reached from here and
+    # this arm could only ever report "completed". Ask the connector what
+    # actually happened, exactly as backfill_with() above does.
+    ok = ok and conn.quota_exhausted is False and conn.backfill_complete
+    out.append({"pattern": "paged_scan", "completed": bool(ok),
                 "records": len(conn.store.records),
                 "calls": vendor.calls,
                 "simulated_seconds": round(clock.now(), 2)})
@@ -128,7 +133,8 @@ def access_patterns(overrides):
             conn._call(vendor.get_many, [rid])
     except QuotaExhausted:
         ok = False
-    out.append({"pattern": "paged_scan_plus_detail_fetch", "completed": ok,
+    ok = ok and conn.quota_exhausted is False and conn.backfill_complete
+    out.append({"pattern": "paged_scan_plus_detail_fetch", "completed": bool(ok),
                 "records": len(conn.store.records),
                 "calls": vendor.calls,
                 "simulated_seconds": round(clock.now(), 2)})
@@ -144,7 +150,8 @@ def access_patterns(overrides):
             conn.store.upsert(r, source_version=r.get("version"))
     except QuotaExhausted:
         ok = False
-    out.append({"pattern": "bulk_export", "completed": ok,
+    ok = ok and conn.quota_exhausted is False
+    out.append({"pattern": "bulk_export", "completed": bool(ok),
                 "records": len(conn.store.records),
                 "calls": vendor.calls,
                 "simulated_seconds": round(clock.now(), 2)})

@@ -41,8 +41,6 @@ PREDICTION = {
 }
 
 INTERVAL_SECONDS = 300
-GOOD_POLL = dict(use_tiebreaker=True, inclusive_bound=True,
-                 overlap_seconds=120.0, use_deletes_api=True)
 
 # How many partitions the checksum strategy splits the corpus into. More
 # partitions localize the damage better and cost more probe calls; this is the
@@ -73,11 +71,20 @@ def partition_of(rid, n):
 
 
 def reconcile(strategy, conn, vendor):
-    """Run one reconciliation strategy. Returns what it found and what it cost."""
+    """Run one strategy. Returns what it found, what it cost, and what it SAW.
+
+    The third value is the count check's doing. Scoring a strategy purely on
+    the records it NAMES gives it a detection rate of zero, which is correct
+    and is the finding; but written as `found["missing"] |= set()` it is also
+    unfalsifiable: the zero comes from a line that can only produce zero, not
+    from a run. Reporting the signal separately from the names keeps the zero
+    and makes it a measurement.
+    """
     calls_before = vendor.calls
     truth = {r["id"]: r for r in vendor._live()}
     local = conn.store.live()
     found = {"missing": set(), "ghost": set(), "wrong": set()}
+    signal = {}
 
     if strategy == "none":
         pass
@@ -86,10 +93,11 @@ def reconcile(strategy, conn, vendor):
         remote_n = conn._call(vendor.count)
         # A count tells you a number, not which records. Even when it differs
         # it names nothing, and when equal-and-opposite errors cancel it does
-        # not even differ. It is a smoke alarm, not a diagnosis.
-        if remote_n != len(local):
-            found["missing"] |= set()
-            found["ghost"] |= set()
+        # not even differ. It is a smoke alarm, not a diagnosis: it fires here,
+        # since the counts really are unequal, and it still adds nothing to
+        # `found`, because there is nothing it could add.
+        signal = {"remote_count": remote_n, "local_count": len(local),
+                  "discrepancy_signalled": remote_n != len(local)}
 
     elif strategy == "partitioned_checksum":
         # Probe each partition with count + hash of sorted ids, then fetch
@@ -140,12 +148,13 @@ def reconcile(strategy, conn, vendor):
     else:
         raise ValueError("unknown strategy: %r" % (strategy,))
 
-    return found, vendor.calls - calls_before
+    return found, vendor.calls - calls_before, signal
 
 
 def main():
     out = {"partitions": PARTITIONS, "interval_seconds": INTERVAL_SECONDS,
-           "poll_config": GOOD_POLL, "vendors": {}}
+           "poll_config": {v: lab.good_poll_config(v)
+                           for v in ("atlas", "beacon")}, "vendors": {}}
 
     for vendor_name in ("atlas", "beacon"):
         print("=== %s ===" % vendor_name)
@@ -153,13 +162,18 @@ def main():
         actual = None
         for strategy in ("none", "count_check", "partitioned_checksum",
                          "full_id_inventory", "full_field_compare"):
+            # The poll is configured PER VENDOR, for the reason
+            # lab.good_poll_config gives: Atlas needs the deletes endpoint,
+            # Beacon needs the archived flag, and one shared literal cannot be
+            # right for both.
             clock, vendor, lim, conn = lab.build_run(
-                vendor_name, config=SyncConfig(**GOOD_POLL))
+                vendor_name,
+                config=SyncConfig(**lab.good_poll_config(vendor_name)))
             conn.backfill()
             conn.run(until=W.TIMELINE_SECONDS, interval_seconds=INTERVAL_SECONDS)
 
             actual = drift_report(conn.store, vendor)
-            found, cost = reconcile(strategy, conn, vendor)
+            found, cost, signal = reconcile(strategy, conn, vendor)
 
             detected = {k: len(found[k] & set(actual[k])) for k in actual}
             missed = {k: len(actual[k]) - detected[k] for k in actual}
@@ -172,6 +186,7 @@ def main():
                 "total_present": sum(len(v) for v in actual.values()),
                 "total_detected": sum(detected.values()),
                 "total_missed": sum(missed.values()),
+                "signal": signal,
             }
             row["detection_rate"] = round(
                 row["total_detected"] / row["total_present"], 6) \

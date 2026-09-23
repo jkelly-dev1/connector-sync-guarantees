@@ -36,12 +36,16 @@ jobs:
 
       # Regenerate the evidence and refuse any diff.
       #
-      # Of the suite, 38 tests assert over results/*.json, which are committed
-      # artifacts. Without this step a change to the simulation, the connector
-      # or an experiment script leaves every one of those tests reading the
-      # OLD file and passing, so the suite reports green on code that no
-      # longer produces the published numbers. The invariants have teeth only
-      # against a fresh run, and nothing was performing one.
+      # Of the suite, 35 test functions assert over results/*.json, which are
+      # committed artifacts. Without this step a change to the simulation, the
+      # connector or an experiment script leaves every one of those tests
+      # reading the old file and passing, so the suite reports green on code
+      # that no longer produces the published numbers. The invariants have
+      # teeth only against a fresh run, and this step performs one.
+      #
+      # That count is checked by
+      # tests/test_documented_claims.py::test_the_ci_comment_counts_the_result_backed_tests_correctly
+      # rather than maintained by hand, because it had already drifted once.
       #
       # This is cheap because the whole thing is deterministic: no clock, no
       # network, no container, a seeded world, and all four experiments finish
@@ -59,3 +63,10 @@ jobs:
       # leaving the document quietly wrong.
       - name: README numbers match the shipped results
         run: python scripts/check_readme_numbers.py
+
+      # SAMPLE_RUN.md says every command in it "was executed exactly as
+      # written" and that "no output below was altered". A transcript is
+      # believed for longer than a table, because a reader who would re-check
+      # a figure will not re-run a captured session, so it is re-run here.
+      - name: SAMPLE_RUN.md matches what the commands print
+        run: python scripts/check_sample_run.py

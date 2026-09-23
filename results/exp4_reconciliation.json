@@ -3,10 +3,18 @@
   "interval_seconds": 300,
   "partitions": 40,
   "poll_config": {
-    "inclusive_bound": true,
-    "overlap_seconds": 120.0,
-    "use_deletes_api": true,
-    "use_tiebreaker": true
+    "atlas": {
+      "inclusive_bound": true,
+      "overlap_seconds": 120.0,
+      "use_deletes_api": true,
+      "use_tiebreaker": true
+    },
+    "beacon": {
+      "inclusive_bound": true,
+      "overlap_seconds": 120.0,
+      "scan_archived": true,
+      "use_tiebreaker": true
+    }
   },
   "prediction": {
     "checksum_calls": 41,
@@ -42,6 +50,7 @@
           "missing": 0,
           "wrong": 57
         },
+        "signal": {},
         "strategy": "none",
         "total_detected": 0,
         "total_missed": 58,
@@ -66,6 +75,11 @@
           "ghost": 1,
           "missing": 0,
           "wrong": 57
+        },
+        "signal": {
+          "discrepancy_signalled": true,
+          "local_count": 3897,
+          "remote_count": 3896
         },
         "strategy": "count_check",
         "total_detected": 0,
@@ -92,6 +106,7 @@
           "missing": 0,
           "wrong": 57
         },
+        "signal": {},
         "strategy": "partitioned_checksum",
         "total_detected": 1,
         "total_missed": 57,
@@ -117,6 +132,7 @@
           "missing": 0,
           "wrong": 57
         },
+        "signal": {},
         "strategy": "full_id_inventory",
         "total_detected": 1,
         "total_missed": 57,
@@ -142,6 +158,7 @@
           "missing": 0,
           "wrong": 57
         },
+        "signal": {},
         "strategy": "full_field_compare",
         "total_detected": 58,
         "total_missed": 0,
@@ -160,19 +177,20 @@
           "wrong": 0
         },
         "drift_missed": {
-          "ghost": 124,
+          "ghost": 3,
           "missing": 0,
           "wrong": 48
         },
         "drift_present": {
-          "ghost": 124,
+          "ghost": 3,
           "missing": 0,
           "wrong": 48
         },
+        "signal": {},
         "strategy": "none",
         "total_detected": 0,
-        "total_missed": 172,
-        "total_present": 172
+        "total_missed": 51,
+        "total_present": 51
       },
       {
         "calls": 1,
@@ -185,27 +203,32 @@
           "wrong": 0
         },
         "drift_missed": {
-          "ghost": 124,
+          "ghost": 3,
           "missing": 0,
           "wrong": 48
         },
         "drift_present": {
-          "ghost": 124,
+          "ghost": 3,
           "missing": 0,
           "wrong": 48
         },
+        "signal": {
+          "discrepancy_signalled": true,
+          "local_count": 3879,
+          "remote_count": 3876
+        },
         "strategy": "count_check",
         "total_detected": 0,
-        "total_missed": 172,
-        "total_present": 172
+        "total_missed": 51,
+        "total_present": 51
       },
       {
-        "calls": 77,
-        "calls_per_1000_records": 19.25,
-        "detection_per_call": 1.6104,
-        "detection_rate": 0.72093,
+        "calls": 43,
+        "calls_per_1000_records": 10.75,
+        "detection_per_call": 0.0698,
+        "detection_rate": 0.058824,
         "drift_detected": {
-          "ghost": 124,
+          "ghost": 3,
           "missing": 0,
           "wrong": 0
         },
@@ -215,22 +238,23 @@
           "wrong": 48
         },
         "drift_present": {
-          "ghost": 124,
+          "ghost": 3,
           "missing": 0,
           "wrong": 48
         },
+        "signal": {},
         "strategy": "partitioned_checksum",
-        "total_detected": 124,
+        "total_detected": 3,
         "total_missed": 48,
-        "total_present": 172
+        "total_present": 51
       },
       {
         "calls": 4,
         "calls_per_1000_records": 1.0,
-        "detection_per_call": 31.0,
-        "detection_rate": 0.72093,
+        "detection_per_call": 0.75,
+        "detection_rate": 0.058824,
         "drift_detected": {
-          "ghost": 124,
+          "ghost": 3,
           "missing": 0,
           "wrong": 0
         },
@@ -240,22 +264,23 @@
           "wrong": 48
         },
         "drift_present": {
-          "ghost": 124,
+          "ghost": 3,
           "missing": 0,
           "wrong": 48
         },
+        "signal": {},
         "strategy": "full_id_inventory",
-        "total_detected": 124,
+        "total_detected": 3,
         "total_missed": 48,
-        "total_present": 172
+        "total_present": 51
       },
       {
         "calls": 39,
         "calls_per_1000_records": 9.75,
-        "detection_per_call": 4.4103,
+        "detection_per_call": 1.3077,
         "detection_rate": 1.0,
         "drift_detected": {
-          "ghost": 124,
+          "ghost": 3,
           "missing": 0,
           "wrong": 48
         },
@@ -265,14 +290,15 @@
           "wrong": 0
         },
         "drift_present": {
-          "ghost": 124,
+          "ghost": 3,
           "missing": 0,
           "wrong": 48
         },
+        "signal": {},
         "strategy": "full_field_compare",
-        "total_detected": 172,
+        "total_detected": 51,
         "total_missed": 0,
-        "total_present": 172
+        "total_present": 51
       }
     ]
   }
