@@ -1,9 +1,9 @@
 """Shared helpers: building a run, and writing a result file.
 
-Standard library only, no network, no container, no database. The entire
-repository runs with `python3` and nothing else, which is a first for this
-portfolio and is the direct consequence of the simulated clock: there is
-nothing to wait for, so there is nothing to run.
+Standard library only, no network, no container, no database. The experiments
+need `python3` and nothing else, which is the direct consequence of the
+simulated clock: there is nothing to wait for, so there is nothing to run. The
+test suite also needs `pytest`.
 """
 
 import json
@@ -39,7 +39,7 @@ def build_run(vendor_name, strategy="token_bucket", share=0.5, config=None):
 #
 # There is one dictionary here and not a literal in each experiment because the
 # right configuration is NOT THE SAME ON BOTH VENDORS and a single shared
-# literal quietly asserts that it is. Atlas hard-deletes and needs the
+# literal silently asserts that it is. Atlas hard-deletes and needs the
 # dedicated deletes endpoint; Beacon archives, has no such endpoint at all, and
 # needs the archived flag scanned instead. Handing Beacon `use_deletes_api`
 # does harm: get_deleted raises NotImplementedError, the connector

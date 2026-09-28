@@ -12,8 +12,9 @@ arguable:
     scan_archived       treat an archived flag as a deletion signal
 
 Two of those mitigations are free and are simply correct. Two of them cost
-redundant reads. NONE of them recover a silent update, and the experiment
-exists to show which is which.
+redundant reads. None of them recovers a silent update except by accident,
+when its kept stamp falls inside the re-read window, and the experiment exists
+to show which is which.
 """
 
 from sim.vendors import QuotaExhausted, RateLimited
@@ -112,6 +113,7 @@ class Connector:
         self.backfill_complete = None    # None = no backfill has been run
         self.quota_exhausted = False
         self.throttle_events = 0
+        self.deletes_failures = 0
 
     # ---- the call wrapper -------------------------------------------------
 
@@ -246,6 +248,7 @@ class Connector:
             if len(page) < cfg.page_size:
                 break
 
+        deletes_failed = False
         if cfg.use_deletes_api:
             try:
                 gone = self._call(
@@ -256,7 +259,14 @@ class Connector:
                 for rid in gone:
                     self.store.mark_deleted(rid)
             except (QuotaExhausted, NotImplementedError):
-                pass
+                # The deletions in this window were not read. Leaving the
+                # watermark where it was makes the next pass ask again;
+                # advancing it would put them behind the cursor for good.
+                deletes_failed = True
+                self.deletes_failures += 1
+
+        if deletes_failed:
+            return observed
 
         # Advance to what was observed, not to "now". Advancing to the current
         # time asserts that everything up to now was seen, which is precisely
@@ -392,6 +402,13 @@ def score_by_mutation_kind(store, vendor, timeline, up_to):
             # Reflected means the connector knows it is gone.
             if rid in store.deleted or local is None:
                 rec["reflected"] += 1
+        elif truth is None or vendor._tombstoned(truth):
+            # The record has since been deleted or archived upstream, so this
+            # change has no current value to reflect. Scoring it as missed
+            # would charge a correct delete mechanism for every update that
+            # preceded the delete. It is counted apart instead.
+            rec["happened"] -= 1
+            rec["superseded_by_delete"] = rec.get("superseded_by_delete", 0) + 1
         else:
             if truth is not None and local is not None \
                     and local.get("version") == truth.get("version"):

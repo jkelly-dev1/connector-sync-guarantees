@@ -1,7 +1,7 @@
 # Sample run
 
-Captured 2026-09-16 on one Linux machine with Python 3.13.7, superseding the
-2026-08-23 capture. Every command below was executed exactly as written, in
+Captured 2026-09-27 on one Linux machine with Python 3.13.7, superseding the
+2026-09-16 capture. Every command below was executed exactly as written, in
 this order, from a clean checkout.
 
 No output below was altered, and `scripts/check_sample_run.py` checks
@@ -10,15 +10,16 @@ byte, and CI runs it.
 
 Only the suite's last line is not compared verbatim. Its test count is
 checked; its duration is wall-clock, and that duration is the only wall-clock
-figure anywhere in this repository. Every other duration below is simulated
+figure in this transcript. Every other duration below is simulated
 seconds from a clock the code advances explicitly, so the capture, the
 committed results and the README agree on any machine.
 
 The last block is the proof rather than the claim: the whole experiment set is
 run a second time and diffed against the first, and the diff is empty.
 
-The whole thing needs `python3` AND NOTHING ELSE. No container, no database, no
-service, no network, no credentials.
+The experiments need `python3` and nothing else: no container, no database, no
+service, no network, no credentials. The test suite also needs `pytest`, which
+is the one package CI installs.
 
 ```
 $ python3 scripts/exp1_rate_limits.py
@@ -83,7 +84,7 @@ $ python3 scripts/exp2_incremental_loss.py
     overlap   1800s  accuracy 0.9879  wrong  171  redundant reads   6431  calls   137
 
 best configuration on atlas: 58 changes still wrong
-  SILENT_UPDATE missed 54 of 85 (63.5%)
+  SILENT_UPDATE missed 50 of 76 (65.8%)
   each wrong record blamed on its LATEST unreflected change:
     SILENT_UPDATE       45 of 58 wrong records
     UPDATE               8 of 58 wrong records
@@ -95,18 +96,18 @@ wrote results/exp2_incremental_loss.json
 $ python3 scripts/exp3_webhooks_vs_polling.py
 === atlas ===
   poll_only                  missed   67/1188 (0.0564)  p50  154.1s  max 17802.6s  calls   213
-  webhook_only               missed   44/1188 (0.0370)  p50    6.0s  max    39.9s  calls  1165
-  webhook_plus_poll          missed    4/1188 (0.0034)  p50    6.1s  max  2219.3s  calls  1357
-  webhook_plus_poll_outage   missed   51/1188 (0.0429)  p50  111.6s  max 17802.6s  calls   485
+  webhook_only               missed   29/1188 (0.0244)  p50    6.1s  max 26643.3s  calls  1165
+  webhook_plus_poll          missed    4/1188 (0.0034)  p50    6.1s  max  1989.9s  calls  1357
+  webhook_plus_poll_outage   missed   51/1188 (0.0429)  p50  111.1s  max 17802.6s  calls   485
 === beacon ===
   poll_only                  missed   55/1191 (0.0462)  p50  152.5s  max 15714.0s  calls   137
-  webhook_only               missed   46/1191 (0.0386)  p50    6.3s  max    40.0s  calls  1186
+  webhook_only               missed   28/1191 (0.0235)  p50    6.3s  max 14964.8s  calls  1186
   webhook_plus_poll          missed    0/1191 (0.0000)  p50    6.3s  max   295.3s  calls  1282
   webhook_plus_poll_outage   missed   44/1191 (0.0369)  p50  103.3s  max  7918.7s  calls   411
 
 poll alone   p50 154.1s, missed 67
 webhook+poll p50 6.1s, missed 4
-webhook-to-poll delta: 58 changes the poll caught first
+webhook-to-poll delta: 53 changes the poll caught first
 outage arm   missed 51, subscription active at end: False
              881 events dropped at the source AFTER the subscription was disabled
              it was disabled at t=7744.6s and never re-enabled
@@ -143,12 +144,12 @@ prediction: REFUTED
 wrote results/exp4_reconciliation.json
 
 $ python -m pytest -q
-........................................................................ [ 63%]
-.........................................                                [100%]
-113 passed in 1.63s
+........................................................................ [ 62%]
+...........................................                              [100%]
+115 passed in 1.77s
 
 $ python3 scripts/check_readme_numbers.py
-73 figures and 4 charts re-derived from results/*.json and checked against README.md
+92 figures and 4 charts re-derived from results/*.json and checked against README.md
 all present
 
 $ the reproducibility claim, checked

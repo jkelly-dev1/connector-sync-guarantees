@@ -19,7 +19,9 @@ that real ingestion loses data:
                      does not, the connector has a bug rather than a limit.
   SILENT_UPDATE      the record changes and last_modified DOES NOT MOVE. Models
                      a bulk import or an admin path that bypasses the trigger.
-                     NO watermark scan can ever see this, at any overlap.
+                     A watermark scan sees it only by accident: when the kept
+                     stamp falls inside the window it re-reads, or when a
+                     later update moves the stamp.
   IN_FLIGHT_UPDATE   committed during a sync pass, stamped before the pass
                      began. The scan has already read past that position.
   LATE_CLOCK_UPDATE  stamped from a vendor clock running behind the harness, so
@@ -78,7 +80,7 @@ def _bits(*parts):
 
     Keyed rather than concatenated so that ("a", "bc") and ("ab", "c") cannot
     collide, which is the failure that makes a generator look random while
-    quietly correlating two fields.
+    silently correlating two fields.
     """
     msg = "|".join(str(p) for p in parts).encode("utf-8")
     return int.from_bytes(

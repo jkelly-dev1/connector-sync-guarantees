@@ -143,15 +143,21 @@ def run(vendor_name, use_webhooks, use_poll, outage=False):
                 # the ordinary read path. Absence IS the signal, and this is
                 # the only way the webhook path ever learns about a deletion.
                 conn.store.mark_deleted(event["record_id"])
-            m = by_seq.get(event["seq"])
-            if event["seq"] not in detected_at and m is not None \
-                    and reflects(m):
-                detected_at[event["seq"]] = clock.now()
-                webhook_detections += 1
+            # The same crediting scope as the poll branch: every change to the
+            # re-read record that has happened and that the store now holds,
+            # not only the one this event announced. A delivery that re-reads
+            # a record also brings the connector up to date on an earlier
+            # change whose own event was lost, and that is when it was
+            # detected under the definition above.
+            for m in vendor.timeline:
+                if (m["record_id"] == event["record_id"]
+                        and m["at"] <= clock.now()
+                        and m["seq"] not in detected_at and reflects(m)):
+                    detected_at[m["seq"]] = clock.now()
+                    webhook_detections += 1
             continue
 
         # A scheduled poll.
-        before = dict((k, v.get("version")) for k, v in conn.store.records.items())
         conn.incremental_pass()
         for m in vendor.timeline:
             if m["at"] > clock.now() or m["seq"] in detected_at:

@@ -42,7 +42,7 @@ class RateLimited(Exception):
 class QuotaExhausted(Exception):
     """The DAILY allowance is gone. Retrying today cannot help.
 
-    A separate exception type on purpose. A per-second limit is a throughput
+    A separate exception type. A per-second limit is a throughput
     problem that fixes itself in a second; a daily cap is a capacity problem
     that nothing fixes until tomorrow. Collapsing them into one error is how a
     connector spends the rest of its day retrying something that cannot

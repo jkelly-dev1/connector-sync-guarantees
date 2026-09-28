@@ -130,7 +130,7 @@ def test_the_access_pattern_chart_keeps_the_small_bars_visible():
 
 def test_a_ladder_rung_with_no_chart_label_is_an_error_not_an_omission():
     # (mutation-checked: restore the `continue` and this passes while the
-    # chart quietly drops a whole mitigation)
+    # chart silently drops a whole mitigation)
     #
     # The ghost chart is the argument of this repository (five flat bars and
     # a cliff), so a rung silently missing from it is a missing step in the

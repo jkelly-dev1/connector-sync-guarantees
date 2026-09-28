@@ -69,7 +69,7 @@ class WebhookChannel:
             down = (receiver_down_from is not None
                     and receiver_down_from <= arrival <= receiver_down_until)
             if down:
-                # The subscription dies quietly. Consecutive failed deliveries
+                # The subscription dies silently. Consecutive failed deliveries
                 # trip the vendor's own disable threshold, and no further event
                 # is ever sent; including after the receiver comes back.
                 self.consecutive_failures += 1

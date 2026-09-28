@@ -111,3 +111,49 @@ def test_the_ci_comment_counts_the_result_backed_tests_correctly():
         "ci.yml says %s, the suite has %d: %s" % (claimed.group(1),
                                                   len(backed), backed)
 
+
+
+# The README states some figures more than once, and states others in words
+# ("fifteen times", "three quarters", "the 101st call"). The figures checker
+# compares by substring, so one derived copy satisfies it and every other copy
+# is unowned. These rows each derive one such sentence; each must exist and
+# must match exactly one place in the README, or it is not anchoring anything.
+ANCHORED_ROWS = (
+    "world size, section 1",
+    "world size, access patterns",
+    "world size, section 4",
+    "e2 wrong records heading",
+    "world timeline hours",
+    "e1 rate ceiling",
+    "e1 refused call",
+    "e1 fastest",
+    "e1 cap share wasted",
+    "e2 overlap span",
+    "e4 id pages",
+    "prediction tally",
+)
+
+
+def _figure_rows():
+    import importlib.util
+    path = os.path.join(REPO, "scripts", "check_readme_numbers.py")
+    spec = importlib.util.spec_from_file_location("check_readme_numbers", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return dict(module.build())
+
+
+def test_every_restated_readme_figure_has_its_own_derived_row():
+    # (mutation-checked: drop a row from build(), or anchor one on words the
+    # README does not carry, and this names it)
+    rows = _figure_rows()
+    with open(os.path.join(REPO, "README.md"), encoding="utf-8") as fh:
+        flat = re.sub(r"\s+", " ", fh.read())
+    absent = [label for label in ANCHORED_ROWS if label not in rows]
+    assert absent == [], "no such row in check_readme_numbers.py: %s" % absent
+    not_once = ["%s: %r found %d times" % (label, rows[label],
+                                           flat.count(re.sub(r"\s+", " ",
+                                                             rows[label])))
+                for label in ANCHORED_ROWS
+                if flat.count(re.sub(r"\s+", " ", rows[label])) != 1]
+    assert not_once == [], not_once

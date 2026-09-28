@@ -20,6 +20,11 @@ Measured for each: API calls consumed, drift detected by kind, and drift still
 missed. The question is not "which is best", full comparison is always best
 and always unaffordable, but where the knee is.
 
+Each strategy is a COST MODEL. It is charged the calls it would make, and
+what it detects is read against the answer key (the vendor's own records)
+rather than decided from the responses it paid for. The Calls column is what
+each approach would cost; it is not a trace of an implementation.
+
 The prediction, recorded before the run: a count check catches most drift.
 Expect it REFUTED. A count is blind to equal-and-opposite errors and to every
 silent update, and silent updates are precisely what experiment 2 showed

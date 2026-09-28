@@ -24,7 +24,7 @@ them:
 
 The prediction, recorded before the run: incremental sync on a modified-since
 watermark catches every change. Expect it REFUTED, and expect the losses to
-sort into kinds rather than spreading evenly: SILENT_UPDATE unrecoverable at
+sort into kinds instead of spreading evenly: SILENT_UPDATE unrecoverable at
 any setting, DELETE unrecoverable without the deletes call, and the in-flight
 and clock-skew losses shrinking but not vanishing as the overlap grows.
 """

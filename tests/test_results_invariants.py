@@ -123,8 +123,9 @@ def test_incremental_sync_does_not_catch_everything(exp2):
 
 
 def test_a_silent_update_is_missed_at_every_setting(exp2):
-    # No overlap, no tiebreaker and no deletes endpoint can recover a change
-    # that never moved the timestamp being filtered on.
+    # No overlap, no tiebreaker and no deletes endpoint reliably recovers a
+    # change that never moved the timestamp being filtered on; an overlap
+    # brings some back by accident, and the rest stay missed at every setting.
     for vendor, data in exp2["vendors"].items():
         for row in data["ladder"]:
             silent = row["by_mutation_kind"].get("SILENT_UPDATE")

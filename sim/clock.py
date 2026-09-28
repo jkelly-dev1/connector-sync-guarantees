@@ -61,7 +61,7 @@ class Clock:
 
 
 class Skew:
-    """A second clock that is deliberately WRONG relative to the harness clock.
+    """A second clock that is WRONG relative to the harness clock.
 
     Models the vendor stamping last_modified from its own clock, which is not
     synchronized with yours. A skew of -11.0 means the vendor believes it is

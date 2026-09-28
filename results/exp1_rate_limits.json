@@ -52,6 +52,7 @@
     "cap_bound_strategies_completed": [],
     "cap_bound_strategies_total": 4,
     "claim": "a smarter client-side limiter completes the backfill faster",
+    "fastest_paced_strategy": "aimd",
     "fastest_strategy": "naive",
     "n_plus_one_call_multiple": 191.5,
     "rate_bound_did_not_finish": [],

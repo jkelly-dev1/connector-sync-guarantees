@@ -80,10 +80,13 @@ def _wall_clock_reads(path):
                     found.append("%s:%d import %s"
                                  % (path.name, node.lineno, alias.name))
         elif isinstance(node, ast.ImportFrom):
-            if (node.module or "").split(".")[0] in _WALL_CLOCK_MODULES:
-                names = ", ".join(a.name for a in node.names)
+            module = (node.module or "").split(".")[0]
+            names = [a.name for a in node.names]
+            if module in _WALL_CLOCK_MODULES or any(
+                    (module, name) in _WALL_CLOCK_ATTRS for name in names):
                 found.append("%s:%d from %s import %s"
-                             % (path.name, node.lineno, node.module, names))
+                             % (path.name, node.lineno, node.module,
+                                ", ".join(names)))
         elif isinstance(node, ast.Attribute) and isinstance(node.value,
                                                             ast.Name):
             if (node.value.id, node.attr) in _WALL_CLOCK_ATTRS:
@@ -114,7 +117,7 @@ def test_nothing_in_the_simulation_reads_the_clock_or_a_random_stream():
     #     measurement path is read, not only sim.world.
     # An import is a structural fact, so it is found structurally.
     files = _measurement_path()
-    # A filter that quietly matched nothing would make this test green while
+    # A filter that silently matched nothing would make this test green while
     # examining zero files, which is the failure mode of every check that
     # narrows its own input.
     assert len(files) >= 15, [f.name for f in files]
@@ -148,7 +151,7 @@ def test_the_timeline_is_ordered_by_time():
 
 def test_a_silent_update_does_not_advance_the_stamp():
     # The unfixable loss, asserted at its source. If this ever starts advancing
-    # the stamp, experiment 2's central finding quietly disappears.
+    # the stamp, experiment 2's central finding silently disappears.
     tl = W.mutation_timeline("atlas")
     silent = [m for m in tl if m["kind"] == "SILENT_UPDATE"]
     assert silent, "the world must contain silent updates"
@@ -284,7 +287,7 @@ def test_a_vendor_that_does_not_say_what_a_tombstone_is_fails_loudly():
     #
     # The base class must not guess. Atlas spells a tombstone `deleted` and
     # Beacon spells it `archived`; a third shape that forgets to say gets an
-    # exception at its first read, not a quietly wrong world.
+    # exception at its first read, not a silently wrong world.
     from sim.vendors import Vendor
 
     class Nameless(Vendor):
@@ -399,7 +402,9 @@ def test_beacon_search_truncates_silently_at_its_ceiling():
     v.search_result_ceiling = 10
     v.page_size_max = 100
     rows = v.search_modified_since(-1e18, limit=100)
-    assert len(rows) <= 10
+    # Exactly the ceiling: more than ten records match, so an endpoint that
+    # returned nothing would also satisfy "at most ten".
+    assert len(rows) == 10
 
 
 # ---------------------------------------------------------------------------
@@ -424,6 +429,16 @@ def test_a_token_bucket_permits_a_burst_up_to_its_capacity():
     for _ in range(5):
         lim.acquire()
     assert c.now() == start          # the burst is free
+
+    # ...and capped: after a long idle the bucket holds `capacity` tokens and
+    # no more, so the sixth call in a row waits.
+    c.advance(100)
+    start = c.now()
+    for _ in range(5):
+        lim.acquire()
+    assert c.now() == start
+    lim.acquire()
+    assert c.now() > start
 
 
 def test_the_naive_limiter_never_waits():

@@ -1,7 +1,14 @@
-"""Re-derive every published figure from results/*.json and require it verbatim
-in README.md.
+"""Re-derive the published figures from results/*.json and require them
+verbatim in README.md.
+
+Not derived: the figures inside the claims table's "(mutation-checked: ...)"
+notes, which describe an edit and what it produced, not a published result.
+Those are 100,000 (the requests a free call lets naive make) and 97 (the
+deletions the webhook arms credit with the tombstone returned). Every other
+figure in README.md is a row this prints with --emit.
 
     python3 scripts/check_readme_numbers.py
+    python3 scripts/check_readme_numbers.py --emit    print what it derives
 
 Why this exists. A number in a document has no owner. The results files are
 rewritten by every run; the prose is rewritten by hand, sometimes, when
@@ -12,7 +19,7 @@ look like a figure to a reader or to whoever writes a deriver, so it is the one
 most likely to go stale.
 
 It prints how many figures it checked whether or not any are missing, so a
-version that has quietly stopped deriving half of them is visible rather than
+version that has silently stopped deriving half of them is visible rather than
 clean.
 
 Unlike the sibling timing repository, this one never goes red on a re-run.
@@ -140,9 +147,17 @@ def build():
         % round(100.0 * silent_n / total_wrong))
     add("e2 silent miss rate", "missed\n%s percent of the time"
         % f(100.0 * e2["prediction"]["silent_update_miss_rate"], 1))
+    # The knee and the widest window, the same two points the sentence
+    # before this one names, so the three figures cannot disagree on which
+    # windows they compare.
     ov = {r["overlap_seconds"]: r for r in e2["vendors"]["atlas"]["overlap_sweep"]}
-    recovered = ov[120.0]["score"]["wrong"] - ov[1800.0]["score"]["wrong"]
-    extra = ov[1800.0]["redundant_upserts"] - ov[120.0]["redundant_upserts"]
+    sweep = e2["vendors"]["atlas"]["overlap_sweep"]
+    best = min(r["score"]["wrong"] for r in sweep)
+    knee = min(r["overlap_seconds"] for r in sweep
+               if r["score"]["wrong"] <= best + 1)
+    widest = max(ov)
+    recovered = ov[knee]["score"]["wrong"] - ov[widest]["score"]["wrong"]
+    extra = ov[widest]["redundant_upserts"] - ov[knee]["redundant_upserts"]
     add("e2 overlap knee", "recovers %s\nrecord and costs %s extra redundant reads"
         % ({1: "one"}.get(recovered, n(recovered)), n(extra)))
     bl = {r["label"]: r for r in e2["vendors"]["beacon"]["ladder"]}
@@ -231,8 +246,12 @@ def build():
     add("e4 count rate", "is refuted at %s" % f(rows["count_check"]["detection_rate"], 4))
     add("e4 wrong count", "that is %s of the %s problems"
         % (n(present["wrong"]), n(rows["full_field_compare"]["total_present"])))
-    add("e4 cost multiple", "%s calls, five times the\ncheapest useful check"
-        % n(rows["full_field_compare"]["calls"]))
+    words = {2: "twice", 3: "three times", 4: "four times", 5: "five times",
+             6: "six times", 7: "seven times", 8: "eight times"}
+    multiple = e4["prediction"]["full_compare_cost_multiple_of_id_inventory"]
+    add("e4 cost multiple", "%s calls, %s the\ncheapest useful check"
+        % (n(rows["full_field_compare"]["calls"]),
+           words.get(int(multiple), "%sx" % f(multiple, 1))))
     add("e4 checksum cost", "%s calls and is strictly worse than simply listing every id"
         % n(rows["partitioned_checksum"]["calls"]))
     # The count check's own two numbers, which the strategy measures and which
@@ -253,19 +272,125 @@ def build():
     add("e3 beacon deletions", "%s of %s deletions"
         % (n(b_arms["webhook_plus_poll"]["deletions_reflected_at_end"]),
            n(b_arms["webhook_plus_poll"]["deletions_happened"])))
+    add("e3 beacon still wrong", "It still ends with %s wrong record"
+        % n(b_arms["webhook_plus_poll"]["score"]["wrong"]))
+
+    # ---- figures the prose quotes from the tables above --------------------
+    rate = {r["strategy"]: r for r in e1["scenarios"]["rate_bound"]["runs"]}
+    pred = e1["prediction"]
+    paced = {k: v for k, v in rate.items() if k != "naive" and v["completed"]}
+    quick = min(paced, key=lambda k: paced[k]["simulated_seconds"])
+    slow = max(paced, key=lambda k: paced[k]["simulated_seconds"])
+    add("e1 spread ends", "(%s %ss to %s %ss)"
+        % (quick, f(paced[quick]["simulated_seconds"], 2),
+           slow, f(paced[slow]["simulated_seconds"], 2)))
+    add("e1 spread with naive", "naive included, it is %sx"
+        % f(pred["rate_bound_spread_including_naive"], 2))
+    add("e1 endpoint moved", "Choosing the endpoint moved %dx"
+        % int(pred["n_plus_one_call_multiple"]))
+    changes = [r["changes"] for v in ("atlas", "beacon")
+               for r in e3["vendors"][v][:1]]
+    add("world changes", "about %s changes"
+        % n(round(sum(changes) / len(changes), -1)))
+    add("e2 knee", "The knee is at %ds, the smallest window\nwithin one record "
+        "of the best" % int(knee))
 
     # ---- the world ---------------------------------------------------------
     # From the experiment that already publishes it, not from a literal, so a
     # change to W.N_RECORDS moves this sentence too.
     add("world size", "%s records per vendor"
         % n(e4["prediction"]["corpus_records"]))
+    cap_cfg = e1["scenarios"]["cap_bound"]["vendor_config"]
+    add("e1 cap work", "allowance of %s calls, work that needs about %s"
+        % (n(cap_cfg["daily_allowance"]),
+           n(e4["prediction"]["corpus_records"] // cap_cfg["page_size"])))
     # The skew is a constant in the generator rather than a measured output, so
     # it is derived from the generator. A figure with no owner is a figure that
     # drifts, whichever file it lives in.
     add("world clock skew", "a clock %ds behind"
         % abs(int(W.VENDOR_CLOCK_SKEW)))
+    add("world timeline hours", "changes over %s simulated\nhours"
+        % whole(e2["timeline_seconds"] / 3600.0))
+
+    # ---- figures the README states more than once --------------------------
+    # The comparison is a substring test, so one derived copy of a number
+    # satisfies it and every other copy has no owner. Each copy below is
+    # anchored with the words around it, so each row matches one sentence.
+    corpus = n(e4["prediction"]["corpus_records"])
+    add("world size, section 1", "backfilling the same %s records" % corpus)
+    add("world size, access patterns", "Same %s records, same limiter" % corpus)
+    add("world size, section 4", "At %s records the full field" % corpus)
+    add("e2 wrong records heading", "### Where the remaining %s wrong records"
+        % n(total_wrong))
+
+    # ---- experiment 1, the limits and the verdicts it quotes ---------------
+    rate_cfg = e1["scenarios"]["rate_bound"]["vendor_config"]
+    add("e1 rate ceiling", "RATE-BOUND (generous daily allowance, %s calls/sec"
+        % whole(rate_cfg["per_second_limit"]))
+    add("e1 refused call", "the %s call,\nrefused by the cap"
+        % ordinal(cap_cfg["daily_allowance"] + 1))
+    add("e1 fastest", "The %s limiter is the fastest" % pred["fastest_strategy"])
+    # The naive run's calls that were rejected rather than served, as a share
+    # of the allowance: every call it made, less the pages it retrieved.
+    wasted = (cap_naive["calls"]
+              - cap_naive["records_held"] // cap_cfg["page_size"])
+    add("e1 cap share wasted", "because it spent %s of the allowance"
+        % quarters(wasted / float(cap_cfg["daily_allowance"])))
+
+    # ---- experiment 2, the overlap span ------------------------------------
+    add("e2 overlap span", "Going from %ds to %ds, %s times the window"
+        % (int(knee), int(widest), number_word(widest / knee)))
+
+    # ---- experiment 4, the id pages ----------------------------------------
+    add("e4 id pages", "there are only %s pages of ids"
+        % number_word(rows["full_id_inventory"]["calls"]))
+
+    # ---- the predictions, tallied over all four results --------------------
+    verdicts = [e["prediction"]["verdict"].upper() for e in (e1, e2, e3, e4)]
+    add("prediction tally", "%s of the\n%s predictions here were refuted, %s "
+        "was qualified"
+        % (number_word(verdicts.count("REFUTED")).capitalize(),
+           number_word(len(verdicts)),
+           number_word(verdicts.count("QUALIFIED"))))
 
     return want
+
+
+WORDS = {0: "zero", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five",
+         6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten",
+         11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen",
+         15: "fifteen", 16: "sixteen", 17: "seventeen", 18: "eighteen",
+         19: "nineteen", 20: "twenty"}
+
+
+def whole(x):
+    """A value the README writes as a whole number. Refuses one that is not,
+    so a changed configuration is not rounded into the old sentence."""
+    if float(x) != int(x):
+        raise SystemExit("expected a whole number, got %r" % x)
+    return n(x)
+
+
+def number_word(x):
+    """A whole number as the README spells it, one to twenty."""
+    return WORDS.get(int(whole(x).replace(",", "")), whole(x))
+
+
+def ordinal(k):
+    suffix = "th" if 10 <= k % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(
+        k % 10, "th")
+    return "%d%s" % (k, suffix)
+
+
+def quarters(share):
+    """A share of a whole, in the words the README uses. A share that is not
+    a whole number of quarters is printed as a percentage, which the README
+    would then have to carry instead."""
+    words = {0: "none", 1: "a quarter", 2: "half", 3: "three quarters",
+             4: "all"}
+    if abs(share * 4 - round(share * 4)) > 1e-9:
+        return "%d percent" % round(100 * share)
+    return words[int(round(share * 4))]
 
 
 def build_charts():
@@ -284,6 +409,10 @@ def build_charts():
 
 
 def main():
+    if "--emit" in sys.argv:
+        for label, text in build() + build_charts():
+            print("%s\n%s" % (label, text))
+        return 0
     with open(README, encoding="utf-8") as fh:
         readme = fh.read()
     flat = re.sub(r"\s+", " ", readme)

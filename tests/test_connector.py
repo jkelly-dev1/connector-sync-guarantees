@@ -292,11 +292,15 @@ def test_scoring_by_kind_separates_what_the_aggregate_hides():
         assert 0.0 <= rec["miss_rate"] <= 1.0
 
 
-def test_a_silent_update_is_never_reflected_by_a_watermark_scan():
-    # The central claim of the repository, asserted directly rather than
-    # inferred from an aggregate. Every mitigation is switched on, and the
-    # silent updates are still missed, because there is nothing in the wire
-    # protocol that could reveal them.
+def test_a_silent_update_is_missed_far_more_often_than_an_ordinary_one():
+    # The central claim of the repository, asserted as a mechanism rather than
+    # as "missed at least once". Every mitigation is switched on. A silent
+    # update keeps its old stamp, so a watermark scan re-reads it only when
+    # that stamp happens to fall inside the scan window or a later update
+    # moves it. That makes it missed most of the time, and several times as
+    # often as an ordinary update in the same run. A silent update that moved
+    # its stamp would be an ordinary update and would miss at the ordinary
+    # rate, which is what a bare `missed > 0` could not tell apart.
     clock, vendor, conn = _conn(SyncConfig(use_tiebreaker=True,
                                            inclusive_bound=True,
                                            overlap_seconds=1800.0,
@@ -306,5 +310,38 @@ def test_a_silent_update_is_never_reflected_by_a_watermark_scan():
     by_kind = score_by_mutation_kind(conn.store, vendor, vendor.timeline,
                                      up_to=clock.now())
     silent = by_kind.get("SILENT_UPDATE")
+    ordinary = by_kind.get("UPDATE")
     assert silent and silent["happened"] > 0
-    assert silent["missed"] > 0
+    assert silent["miss_rate"] > 0.5, silent
+    assert silent["miss_rate"] >= 5 * ordinary["miss_rate"], (silent, ordinary)
+
+
+def test_a_failed_deletes_call_does_not_advance_the_watermark():
+    """The deletions in a window whose deletes call failed are read again on
+    the next pass. Advancing the watermark past them would lose them for
+    good, because the deletes endpoint is asked only from the watermark."""
+    from sim.vendors import QuotaExhausted
+
+    clock, vendor, conn = _conn(SyncConfig(use_tiebreaker=True,
+                                           use_deletes_api=True))
+    conn.backfill()
+    clock.advance(600)
+    vendor.apply_timeline_to_now()
+    conn.incremental_pass()
+    before = conn.watermark
+    clock.advance(600)
+    vendor.apply_timeline_to_now()
+
+    real = vendor.get_deleted
+
+    def exhausted(*args, **kwargs):
+        raise QuotaExhausted("daily cap")
+
+    vendor.get_deleted = exhausted
+    conn.incremental_pass()
+    assert conn.watermark == before
+    assert conn.deletes_failures == 1
+
+    vendor.get_deleted = real
+    conn.incremental_pass()
+    assert conn.watermark is not None and conn.watermark > before

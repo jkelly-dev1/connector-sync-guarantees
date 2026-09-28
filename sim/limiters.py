@@ -17,7 +17,7 @@ given that I want to make a call now, how long do I wait first?
                 will actually tolerate rather than the rate the documentation
                 claims.
 
-Every one of them advances the simulated clock rather than sleeping. A limiter
+Every one of them advances the simulated clock instead of sleeping. A limiter
 that called time.sleep would make the experiment take as long as the thing it
 is measuring, and would make the result depend on this machine.
 """
@@ -98,7 +98,7 @@ class FixedSleep(Limiter):
 class TokenBucket(Limiter):
     """A bucket of `capacity` tokens refilling at `rate` per second.
 
-    The rate is set below the documented limit on purpose. In a real B2B
+    The rate is set below the documented limit. In a real B2B
     integration the quota belongs to the CUSTOMER and is shared with every
     other integration they have installed, so planning to consume 100% of it
     is planning to cause somebody else's outage.

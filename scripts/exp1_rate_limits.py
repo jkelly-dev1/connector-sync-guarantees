@@ -25,7 +25,7 @@ pattern moves an order of magnitude.
 The prediction, recorded before the run: a smarter limiter completes the
 backfill faster. Expect it QUALIFIED. True under a per-second ceiling, and
 close to meaningless under a daily cap, where every strategy fails at the same
-point because the cap is capacity rather than pacing.
+point because the cap is capacity instead of pacing.
 """
 
 import os
@@ -42,6 +42,10 @@ from sim.vendors import QuotaExhausted
 PREDICTION = {
     "claim": "a smarter client-side limiter completes the backfill faster",
 }
+
+# The strategies that adapt to the vendor's signal, as against fixed pacing.
+# Naive does not pace at all and is outside the comparison.
+SMARTER = ("token_bucket", "aimd")
 
 # RATE-BOUND: the daily allowance is not the constraint; the per-second
 # ceiling is. A paged scan at 200 records per page needs ~21 calls, which is
@@ -236,20 +240,32 @@ def main():
     print("the N+1 access pattern costs %.0fx the calls of a paged scan"
           % call_ratio)
 
-    # QUALIFIED is the expected verdict: a better limiter genuinely helps
-    # under a rate ceiling and does nothing at all under a capacity cap.
-    held = spread_rate > 1.2 and len(cap_complete) == len(cap_rows)
+    # The claim is DIRECTIONAL: a smarter limiter finishes faster. So the
+    # adaptive strategies have to beat fixed pacing among the paced ones, or
+    # the claim is refuted outright; it holds only if that also survives the
+    # capacity cap. QUALIFIED is the expected verdict: the smarter limiter
+    # helps under a rate ceiling and does nothing at all under a cap. Naive
+    # is left out of the direction because it is fastest by not pacing.
+    fastest_paced = min(paced_times, key=paced_times.get) if paced_times else None
+    smarter_wins = fastest_paced in SMARTER and spread_rate > 1.2
+    if not smarter_wins:
+        verdict = "REFUTED"
+    elif len(cap_complete) == len(cap_rows):
+        verdict = "held"
+    else:
+        verdict = "QUALIFIED"
     out["prediction"] = dict(
         PREDICTION,
         rate_bound_spread=round(spread_rate, 3),
         rate_bound_spread_including_naive=round(spread_all, 3),
         rate_bound_did_not_finish=did_not_finish,
         fastest_strategy=fastest,
+        fastest_paced_strategy=fastest_paced,
         slowest_strategy=slowest,
         cap_bound_strategies_completed=cap_complete,
         cap_bound_strategies_total=len(cap_rows),
         n_plus_one_call_multiple=round(call_ratio, 1),
-        verdict="held" if held else "QUALIFIED")
+        verdict=verdict)
     print("prediction: %s" % out["prediction"]["verdict"])
 
     lab.write_result("exp1_rate_limits", out)

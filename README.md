@@ -15,9 +15,10 @@ A personal learning project. Claims have tests, figures come from the shipped
 results files, and the predictions were recorded before the runs that refuted
 several of them.
 
-What you need to run it: `python3`. That is the list. No container, no database,
-no service, no credentials, no network. The test suite finishes in about a
-second and the four experiments in under a minute.
+The experiments need `python3` and nothing else: no container, no database, no
+service, no network, no credentials. The test suite also needs `pytest`, which
+is the one package CI installs, and finishes in about a second; the four
+experiments take under a minute.
 
 ## Why there are no wall-clock timings in this repository
 
@@ -35,9 +36,8 @@ Against a simulated clock it measures the strategy. Durations here are
 SIMULATED SECONDS: a property of the algorithm and the vendor's stated limits,
 not of this laptop.
 
-What that gives up is stated plainly in "What this does not measure": this is an
-algorithm against a MODEL of a vendor, and no claim about real-world speed is
-made or implied.
+What that gives up is stated in "Limits": this is an algorithm against a MODEL
+of a vendor, and no claim about real-world speed is made or implied.
 
 ## The two mock vendors
 
@@ -72,7 +72,7 @@ Six kinds of change, each modeling a documented way real ingestion loses data:
 | `MERGE` | two records become one | the loser vanishes silently, leaving a ghost locally |
 
 THE MIX IS INVENTED and is the single biggest assumption here. Every loss rate
-below is a function of it. What transfers is which kinds are unfixable by
+in the sections that follow is a function of it. What transfers is which kinds are unfixable by
 which mitigation, not the rates.
 
 ## 1. What a rate limit costs, and what actually fixes it
@@ -133,6 +133,10 @@ CAP-BOUND (allowance of 100 calls, work that needs about 200):
 | token_bucket | **no** | 100 | 1 | 2,000 |
 | aimd | **no** | 100 | 8 | 1,860 |
 
+The Throttled column counts every rejected call, rate rejections and quota
+rejections together: the 1 for fixed_sleep and token_bucket is the 101st call,
+refused by the cap and not counted in Calls.
+
 None of them complete. A per-second limit is a throughput problem that pacing
 solves; a daily cap is a CAPACITY problem, and no pacing strategy creates
 capacity. The only thing pacing changes is how much you got before you ran out,
@@ -166,8 +170,8 @@ latency. That is why it belongs to a backfill and not to a five-minute
 incremental sync.
 
 The prediction was that a smarter limiter finishes faster, and it is qualified.
-True under a rate ceiling, irrelevant under a cap, and swamped by the access
-pattern in both.
+True among the paced strategies under a rate ceiling, irrelevant under a cap,
+and swamped by the access pattern in both.
 
 ## 2. Does incremental sync actually catch everything?
 
@@ -212,10 +216,11 @@ double-counting:
 | `IN_FLIGHT_UPDATE` | 4 of 58 |
 | `DELETE` | 1 of 58 |
 
-Silent updates are 78 percent of the remaining damage, and they are missed 63.5
+Silent updates are 78 percent of the remaining damage, and they are missed 65.8
 percent of the time even with every mitigation switched on. The ones that do get
-caught are caught by luck. A later ordinary update on the same record happens to
-re-read it. There is nothing in the wire protocol that could reveal the rest.
+caught are caught by luck: a later ordinary update on the same record happens to
+re-read it, or the stale stamp happens to fall inside the overlap the scan
+re-reads. There is nothing in the wire protocol that could reveal the rest.
 
 The prediction that a watermark sync observes every change is refuted, and it is
 scored on the BEST configuration rather than the naive one, because refuting it
@@ -234,8 +239,8 @@ with the naive setup would prove nothing.
 | 1800s | 160 | 5,474 |
 
 Going from 120s to 1800s, fifteen times the window, recovers one record and
-costs 5,001 extra redundant reads. The knee is around 60 to 120 seconds and
-everything past it is paying for nothing.
+costs 5,001 extra redundant reads. The knee is at 120s, the smallest window
+within one record of the best, and everything past it is paying for nothing.
 
 ### Archive semantics beat hard deletes outright
 
@@ -260,14 +265,18 @@ delivery bug.
 | Configuration | Missed | p50 detection | p95 | Worst | Calls |
 | --- | --- | --- | --- | --- | --- |
 | poll only | 67 / 1,188 | 154.1s | 295.0s | 17,802.6s | 213 |
-| webhook only | 44 / 1,188 | 6.0s | 10.0s | 39.9s | 1,165 |
-| webhook + poll | **4 / 1,188** | 6.1s | 36.0s | 2,219.3s | 1,357 |
-| webhook + poll, receiver outage | 51 / 1,188 | 111.6s | 291.5s | 17,802.6s | 485 |
+| webhook only | 29 / 1,188 | 6.1s | 32.7s | 26,643.3s | 1,165 |
+| webhook + poll | **4 / 1,188** | 6.1s | 35.9s | 1,989.9s | 1,357 |
+| webhook + poll, receiver outage | 51 / 1,188 | 111.1s | 291.5s | 17,802.6s | 485 |
 
 Webhooks plus polling is 25x faster to detect and misses 17x less, and it costs
-6.4x the calls. Webhooks alone are fast and still miss 44 changes: best-effort
-delivery is a latency optimization, not a correctness mechanism. 49 duplicate
-deliveries were absorbed by de-duplicating on the event id.
+6.4x the calls. Webhooks alone are fast at the median and still miss 29 changes:
+best-effort delivery is a latency optimization, not a correctness mechanism.
+Their worst case is the other half of that: a change whose own event was lost is
+detected only when a later event on the same record brings the connector up to
+date, here hours later. A change counts as detected at the first moment the
+connector's copy of the record is right, whichever path brought it in. 49
+duplicate deliveries were absorbed by de-duplicating on the event id.
 
 The prediction held. The finding is in the fourth row.
 
@@ -278,11 +287,11 @@ tripped its consecutive-failure threshold and disabled the subscription at
 t=7,744.6 seconds. It never re-enabled. 881 further events were dropped at the
 source, including every one after the receiver came back healthy.
 
-From inside the receiver, a dead subscription and a quiet period look
+From inside the receiver, a dead subscription and an idle period look
 identical. That is why subscription STATUS has to be monitored rather than
 receipt rate, and why the poll has to stay even when the webhooks are working.
 
-The webhook-to-poll delta is 58: the number of changes the poll caught that the
+The webhook-to-poll delta is 53: the number of changes the poll caught that the
 webhook path did not deliver first. That single metric is how much your webhook
 channel can be trusted, and almost nobody measures it.
 
@@ -292,9 +301,11 @@ The table above is Atlas. Beacon's poll alone misses 55 of 1,191 changes, and
 the reason is the asymmetry section 2 measured: archived rows stay in the
 ordinary scan, so deletion detection falls out of the scan the connector was
 running anyway. Add webhooks to it and the arm misses 0 and holds 0 ghost
-records, reflecting 124 of 124 deletions. That is the only fully correct
-configuration in this repository, and it is a property of the vendor's delete
-semantics rather than of anything clever in the connector.
+records, reflecting 124 of 124 deletions. It still ends with 1 wrong record, a
+merge survivor: its version moved with a MERGE whose record id is the absorbed
+record, so no tracked change names the survivor and the missed count cannot see
+it. The low count is a property of the vendor's delete semantics rather than of
+anything clever in the connector.
 
 It is also where a shared configuration literal does real damage. Handing
 Beacon the `use_deletes_api` setting that is correct for Atlas does harm:
@@ -306,7 +317,10 @@ its own poll configuration, and a test asserts that it got one.
 ## 4. What reconciliation costs and what it catches
 
 Five strategies against the drift the best incremental configuration leaves
-behind on Atlas. 58 wrong records, of which 57 are wrong VALUES and 1 is a
+behind on Atlas. The strategies are a cost model: each is charged the calls it
+would make, while its detection is read against the answer key, so the Calls
+column is what each would pay and not a trace of an implementation that
+decides from its own responses. 58 wrong records, of which 57 are wrong VALUES and 1 is a
 ghost:
 
 | Strategy | Calls | Calls per 1k records | Detected | Detection rate |
@@ -414,7 +428,7 @@ The rows the results depend on are mutation-checked and say so.
 | A by-id fetch does not hand back a deleted record (mutation-checked: return the tombstone and the webhook arm re-upserts every deleted record as live) | `tests/test_sim.py::test_a_by_id_fetch_does_not_hand_back_a_deleted_record` |
 | A by-id fetch does not hand back an archived record | `tests/test_sim.py::test_a_by_id_fetch_does_not_hand_back_an_archived_record` |
 | Beacon's search truncates silently at its ceiling | `tests/test_sim.py::test_beacon_search_truncates_silently_at_its_ceiling` |
-| A token bucket paces to its rate and permits a burst | `tests/test_sim.py::test_a_token_bucket_paces_to_its_rate` |
+| A token bucket paces to its rate and permits a burst | `tests/test_sim.py::test_a_token_bucket_paces_to_its_rate`, `tests/test_sim.py::test_a_token_bucket_permits_a_burst_up_to_its_capacity` |
 | AIMD decreases multiplicatively and increases additively | `tests/test_sim.py::test_aimd_decreases_multiplicatively_and_increases_additively` |
 | A limiter honors Retry-After rather than its own backoff | `tests/test_sim.py::test_a_limiter_honors_retry_after_rather_than_its_own_backoff` |
 | Upsert is idempotent on the source id | `tests/test_connector.py::test_upsert_is_idempotent_on_the_source_id` |
@@ -424,7 +438,8 @@ The rows the results depend on are mutation-checked and say so.
 | A quota exhaustion during backfill is not retried forever | `tests/test_connector.py::test_a_quota_exhaustion_during_backfill_is_not_retried_forever` |
 | An interrupted backfill leaves no watermark behind (mutation-checked: set it anyway and every unfetched record falls permanently below the incremental bound) | `tests/test_connector.py::test_an_interrupted_backfill_leaves_no_watermark_behind` |
 | The records an interrupted backfill missed are still reachable | `tests/test_connector.py::test_the_records_an_interrupted_backfill_missed_are_still_reachable` |
-| A silent update is never reflected by a watermark scan | `tests/test_connector.py::test_a_silent_update_is_never_reflected_by_a_watermark_scan` |
+| A silent update is missed most of the time, and several times as often as an ordinary update, because only its stale stamp falling inside the scan window or a later update brings it in | `tests/test_connector.py::test_a_silent_update_is_missed_far_more_often_than_an_ordinary_one` |
+| A failed deletes call leaves the watermark where it was, so the next pass asks again | `tests/test_connector.py::test_a_failed_deletes_call_does_not_advance_the_watermark` |
 | Pacing helps under a rate ceiling | `tests/test_results_invariants.py::test_pacing_helps_under_a_rate_ceiling` |
 | The naive limiter wastes calls it did not need (mutation-checked: make rejected calls free and naive looks strictly better) | `tests/test_results_invariants.py::test_the_naive_limiter_wastes_calls_it_did_not_need` |
 | No limiter strategy survives a daily cap | `tests/test_results_invariants.py::test_no_limiter_strategy_survives_a_daily_cap` |
@@ -453,7 +468,7 @@ The rows the results depend on are mutation-checked and say so.
 | All four experiments measured the same generated world | `tests/test_results_invariants.py::test_all_four_experiments_measured_the_same_generated_world` |
 | Every test this table names actually exists (mutation-checked: rename a cited test and this names the row) | `tests/test_documented_claims.py::test_every_test_the_readme_names_actually_exists` |
 
-## What this does not measure
+## Limits
 
 - **A model of a vendor, not a vendor.** Atlas and Beacon implement a SHAPE
   taken from how systems of that kind publicly behave. No real Salesforce or
@@ -499,7 +514,7 @@ measured here appear there as its stale and incomplete conditions: this
 repository says what a sync loses, that one says whether losing it changes the
 answer.
 
-All three follow the same rules: no claim without a test, mutation checks on the
+All three follow the same rules: every claim has a test, mutation checks on the
 tests that matter, every number re-derived from the shipped results by script,
 and predictions recorded before the run so the refuted ones survive. Two of the
 four predictions here were refuted, one was qualified, and all of them are
